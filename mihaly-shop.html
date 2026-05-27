@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>У Михалыча — Телефоны с гарантией в Севастополе</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 0 20px;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #1d1d1f;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #0071e3;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-right button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .nav-right button:hover {
+            background: #0077ed;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 50px;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%23f5f5f7" width="1200" height="800"/></svg>');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.7);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 8vw, 84px);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: clamp(16px, 3vw, 24px);
+            font-weight: 400;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 980px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Sections */
+        section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(28px, 6vw, 56px);
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+
+        /* Grid Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #f5f5f7;
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0071e3;
+            margin-bottom: 10px;
+        }
+
+        .card .btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature {
+            text-align: left;
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .feature p {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .testimonial {
+            background: #f5f5f7;
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 3px solid #0071e3;
+        }
+
+        .testimonial p {
+            font-size: 15px;
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #555;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        footer {
+            background: #f5f5f7;
+            padding: 60px 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+        }
+
+        .footer-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 12px;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: #0071e3;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 40px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 15px;
+            }
+
+            section {
+                padding: 50px 15px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .testimonials {
+                grid-template-columns: 1fr;
+            }
+
+            .features {
+                gap: 30px;
+            }
+        }
+
+        /* Hero background image */
+        .hero {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.25) 100%);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* Default gradient if no image */
+        .hero.no-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="logo">У Михалыча</div>
+    <ul>
+        <li><a href="#phones">Телефоны</a></li>
+        <li><a href="#repair">Ремонт</a></li>
+        <li><a href="#trade-in">Trade-in</a></li>
+        <li><a href="#about">О нас</a></li>
+    </ul>
+    <div class="nav-right">
+        <a href="tel:+79000000000" style="text-decoration: none; color: #1d1d1f;">+7 (900) 000-00-00</a>
+        <button>Написать</button>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Телефоны с гарантией</h1>
+        <p>Купи, обменяй или отремонтируй смартфон сегодня</p>
+        <div class="cta-buttons">
+            <button class="btn btn-primary">Подобрать телефон</button>
+            <button class="btn btn-secondary">Записаться на ремонт</button>
+        </div>
+    </div>
+</section>
+
+<!-- Phones Section -->
+<section id="phones">
+    <h2 class="section-title">Популярные смартфоны</h2>
+    <div class="grid">
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>iPhone 15</h3>
+            <p>Последний флагман Apple</p>
+            <div class="price">от 109 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>Samsung Galaxy S24</h3>
+            <p>Мощный смартфон с отличной камерой</p>
+            <div class="price">от 89 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>Xiaomi 14</h3>
+            <p>Отличное качество за адекватную цену</p>
+            <div class="price">от 49 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>iPhone 13 (б/у)</h3>
+            <p>Проверенный, с гарантией 90 дней</p>
+            <div class="price">от 59 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>POCO X5</h3>
+            <p>Бюджетный вариант с мощным процессором</p>
+            <div class="price">от 24 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+        <div class="card">
+            <div class="card-image">📱</div>
+            <h3>Redmi Note 13</h3>
+            <p>Надёжный телефон для каждого дня</p>
+            <div class="price">от 19 999 ₽</div>
+            <button class="btn btn-primary">Купить</button>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section>
+    <h2 class="section-title">Почему выбирают У Михалыча</h2>
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">✅</div>
+            <h3>Гарантия на все товары</h3>
+            <p>Полная гарантия от 30 до 365 дней на все смартфоны и запчасти. Если что-то не так — вернём деньги или заменим.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Ремонт от 30 минут</h3>
+            <p>Быстрая диагностика и ремонт. Большинство неполадок чинятся за полчаса. Честная цена до начала работы.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🔄</div>
+            <h3>Trade-in старого телефона</h3>
+            <p>Оценим твой старый смартфон и учтём стоимость при покупке нового. Можно обменять в день обращения.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🛡️</div>
+            <h3>Проверка перед покупкой</h3>
+            <p>Все б/у телефоны проходят полную диагностику IMEI, батареи, экрана и функций. Без скрытых дефектов.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🚀</div>
+            <h3>Настройка и перенос данных</h3>
+            <p>Переносим приложения, фото, контакты, настраиваем аккаунты. Получишь телефон под ключ.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">📞</div>
+            <h3>Поддержка 24/7</h3>
+            <p>Ответим на вопросы в Telegram, WhatsApp или позвонишь. Консультация бесплатна, ответим быстро.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Repair Section -->
+<section id="repair" style="background: #f5f5f7;">
+    <h2 class="section-title">Услуги ремонта</h2>
+    <div class="grid">
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">🔧</div>
+            <h3>Замена экрана</h3>
+            <p>Для всех марок телефонов. Оригинальные и качественные аналоги.</p>
+            <div class="price">от 3 000 ₽</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">🔋</div>
+            <h3>Замена батареи</h3>
+            <p>Быстрая замена АКБ. Проверим качество ёмкости после установки.</p>
+            <div class="price">от 2 000 ₽</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">💧</div>
+            <h3>Чистка после воды</h3>
+            <p>Экстренная помощь при попадании жидкости. Сушка и диагностика.</p>
+            <div class="price">от 1 500 ₽</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">🔌</div>
+            <h3>Замена разъёма</h3>
+            <p>Не заряжается? Поломан Lightning или USB-C? Починим.</p>
+            <div class="price">от 2 500 ₽</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">🎧</div>
+            <h3>Замена динамика</h3>
+            <p>Не слышно звук? Заменим динамик быстро и качественно.</p>
+            <div class="price">от 1 500 ₽</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+        <div class="card" style="background: white;">
+            <div class="feature-icon" style="text-align: center; font-size: 40px;">🔍</div>
+            <h3>Диагностика</h3>
+            <p>Полная проверка работоспособности телефона. Бесплатно для клиентов магазина.</p>
+            <div class="price">Бесплатно</div>
+            <button class="btn btn-primary">Записаться</button>
+        </div>
+    </div>
+</section>
+
+<!-- Trade-in Section -->
+<section id="trade-in">
+    <h2 class="section-title">Обмени старый телефон</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+        <div>
+            <h3 style="font-size: 24px; margin-bottom: 20px;">Как это работает?</h3>
+            <ol style="font-size: 16px; line-height: 2; color: #666;">
+                <li><strong>Принеси старый телефон</strong> — мы его осмотрим прямо при тебе</li>
+                <li><strong>Получи оценку</strong> — честная цена за реальное состояние</li>
+                <li><strong>Выбери новый смартфон</strong> — из нашего каталога</li>
+                <li><strong>Доплати разницу</strong> — и забери новый телефон сегодня</li>
+            </ol>
+        </div>
+        <div>
+            <div style="background: #f5f5f7; padding: 40px; border-radius: 18px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                <h3 style="font-size: 20px; margin-bottom: 15px;">Примеры оценки</h3>
+                <div style="text-align: left; font-size: 14px; color: #666;">
+                    <p style="margin-bottom: 10px;"><strong>iPhone 13 (отличное состояние)</strong> → 55 000 ₽</p>
+                    <p style="margin-bottom: 10px;"><strong>Samsung S22 (хорошее)</strong> → 28 000 ₽</p>
+                    <p style="margin-bottom: 10px;"><strong>Xiaomi 12 (среднее)</strong> → 12 000 ₽</p>
+                    <p><strong>Redmi Note 10 (с дефектами)</strong> → 5 000 ₽</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="about">
+    <h2 class="section-title">Отзывы клиентов</h2>
+    <div class="testimonials">
+        <div class="testimonial">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Купил iPhone 13 б/у. Всё проверили при мне, переносили данные. Отличный сервис, честная цена. Рекомендую!"</p>
+            <div class="testimonial-author">— Виктор К., Севастополь</div>
+        </div>
+        <div class="testimonial">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Разбила экран iPhone. Привезла сюда — чинили 40 минут. Гарантия на запчасть, спасибо ребятам!"</p>
+            <div class="testimonial-author">— Елена Г., Севастополь</div>
+        </div>
+        <div class="testimonial">
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+            <p>"Обменялась старым Xiaomi на Samsung A54. Дали хорошую цену, всё быстро. Спасибо, лучше, чем на Авито!"</p>
+            <div class="testimonial-author">— Дмитрий М., Севастополь</div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section style="background: #1d1d1f; color: white; text-align: center;">
+    <h2 class="section-title" style="color: white;">Остались вопросы?</h2>
+    <p style="font-size: 18px; margin-bottom: 30px; color: #f0f0f0;">Напиши нам — ответим за 5 минут</p>
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <a href="https://t.me/mihalycha_sevastopol" class="btn btn-primary" target="_blank">Telegram</a>
+        <a href="https://wa.me/79000000000" class="btn btn-primary" target="_blank">WhatsApp</a>
+        <a href="tel:+79000000000" class="btn btn-primary">Позвонить</a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4>Магазин</h4>
+            <ul>
+                <li><a href="#phones">Смартфоны</a></li>
+                <li><a href="#repair">Ремонт</a></li>
+                <li><a href="#trade-in">Trade-in</a></li>
+                <li><a href="#">Аксессуары</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Услуги</h4>
+            <ul>
+                <li><a href="#">Замена экрана</a></li>
+                <li><a href="#">Замена батареи</a></li>
+                <li><a href="#">Диагностика</a></li>
+                <li><a href="#">Перенос данных</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Компания</h4>
+            <ul>
+                <li><a href="#">О нас</a></li>
+                <li><a href="#">Блог</a></li>
+                <li><a href="#">Контакты</a></li>
+                <li><a href="#">Политика конфиденциальности</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h4>Контакты</h4>
+            <ul>
+                <li><a href="tel:+79000000000">+7 (900) 000-00-00</a></li>
+                <li><a href="https://t.me/mihalycha_sevastopol" target="_blank">Telegram</a></li>
+                <li><a href="https://wa.me/79000000000" target="_blank">WhatsApp</a></li>
+                <li>Город Севастополь</li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 У Михалыча. Все права защищены. | Купи, обменяй, отремонтируй смартфон в Севастополе.</p>
+    </div>
+</footer>
+
+</body>
+</html>
