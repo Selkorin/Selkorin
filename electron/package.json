@@ -1,0 +1,25 @@
+{
+  "name": "remote-support-app",
+  "version": "1.0.0",
+  "description": "Remote Support Application for macOS",
+  "main": "dist/main.js",
+  "homepage": "./",
+  "author": "Remote Support Team",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "electron .",
+    "dev": "npm run build && electron . --enable-logging",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.6",
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.1.0"
+  }
+}

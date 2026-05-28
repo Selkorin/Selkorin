@@ -1,0 +1,41 @@
+{
+  "appId": "com.remotesupport.app",
+  "productName": "Remote Support",
+  "directories": {
+    "output": "dist/app",
+    "buildResources": "electron/assets"
+  },
+  "files": [
+    "electron/dist/**/*",
+    "apps/server/dist/**/*",
+    "node_modules/**/*"
+  ],
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "category": "public.app-category.utilities",
+    "icon": "electron/assets/icon.png",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "electron/assets/entitlements.mac.plist",
+    "entitlementsInherit": "electron/assets/entitlements.mac.plist"
+  },
+  "dmg": {
+    "sign": false,
+    "contents": [
+      {
+        "x": 130,
+        "y": 220,
+        "type": "file"
+      },
+      {
+        "x": 410,
+        "y": 220,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ]
+  }
+}

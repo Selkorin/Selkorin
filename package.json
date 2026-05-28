@@ -10,14 +10,23 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:server": "npm run dev --workspace=apps/server",
     "build": "npm run build --workspaces",
+    "build:server": "npm run build --workspace=apps/server",
+    "build:web": "npm run build --workspace=apps/web",
     "start": "npm start --workspace=apps/server",
-    "typecheck": "npm run typecheck --workspaces"
+    "typecheck": "npm run typecheck --workspaces",
+    "electron:dev": "npm run build:server && npm run build && npm start --workspace=electron",
+    "electron:build": "npm run build:server && npm run build && npm run build --workspace=electron && electron-builder",
+    "electron:pack": "npm run build:server && npm run build && npm run build --workspace=electron && electron-builder --dir"
   },
   "engines": {
     "node": "20.x"
   },
   "devDependencies": {
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1",
     "typescript": "^5.3.3"
   }
 }
