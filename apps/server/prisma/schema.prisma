@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model DeviceSession {
+  id             String   @id @default(cuid())
+  pairingKey     String   @unique
+  qrToken        String   @unique
+  status         String   @default("created")
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+  operatorId     String?
+  deviceId       String?
+  device         Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  auditLogs      AuditLog[]
+
+  @@index([operatorId])
+  @@index([deviceId])
+  @@index([status])
+}
+
+model Device {
+  id               String          @id @default(cuid())
+  displayName      String
+  model            String?
+  osName           String?
+  osVersion        String?
+  browserName      String?
+  browserVersion   String?
+  userAgent        String?
+  screenWidth      Int?
+  screenHeight     Int?
+  language         String?
+  timezone         String?
+  localIp          String?
+  connectionType   String?
+  permissions      DevicePermissions?
+  lastSeenAt       DateTime?
+  status           String          @default("offline")
+  sessions         DeviceSession[]
+  auditLogs        AuditLog[]
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([status])
+  @@index([lastSeenAt])
+}
+
+model DevicePermissions {
+  id               String   @id @default(cuid())
+  deviceId         String   @unique
+  device           Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  camera           Boolean  @default(false)
+  microphone       Boolean  @default(false)
+  screenShare      Boolean  @default(false)
+  remoteControlNativeAgent Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model NetworkSettings {
+  id                        String  @id @default(cuid())
+  lanOnly                   Boolean @default(true)
+  localServerUrl            String?
+  stunServers               String? // JSON array
+  turnServerUrl             String?
+  turnUsername              String?
+  turnPassword              String?
+  diagnosticProxyUrl        String?
+  diagnosticProxyEnabled    Boolean @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
+
+model AuditLog {
+  id               String          @id @default(cuid())
+  action           String
+  description      String?
+  operatorId       String?
+  deviceId         String?
+  device           Device?         @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  sessionId        String?
+  session          DeviceSession?  @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  metadata         String? // JSON
+  createdAt        DateTime        @default(now())
+
+  @@index([action])
+  @@index([operatorId])
+  @@index([deviceId])
+  @@index([createdAt])
+}
