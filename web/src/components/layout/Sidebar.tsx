@@ -6,6 +6,7 @@ import {
   BarChart3,
   Settings,
   Eye,
+  Target,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -17,6 +18,7 @@ export default function Sidebar() {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/content', icon: FileText, label: 'Content' },
     { path: '/competitors', icon: Eye, label: 'Competitors' },
+    { path: '/leads', icon: Target, label: 'Лиды' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];

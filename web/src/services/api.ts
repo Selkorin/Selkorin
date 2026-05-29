@@ -54,6 +54,34 @@ export const competitorAnalysis = {
     apiClient.post(`/analysis/${id}/send-to-agents`, { agentIds }),
 };
 
+// Lead generation (Yandex Maps parser) endpoints
+export const leads = {
+  search: (data: {
+    niche: string;
+    region?: string;
+    noWebsiteOnly?: boolean;
+    limit?: number;
+    save?: boolean;
+  }) => apiClient.post('/leads/search', data),
+  list: (params?: {
+    niche?: string;
+    region?: string;
+    status?: string;
+    hasWebsite?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => apiClient.get('/leads', { params }),
+  stats: () => apiClient.get('/leads/stats'),
+  update: (id: string, data: { status?: string; notes?: string }) =>
+    apiClient.put(`/leads/${id}`, data),
+  remove: (id: string) => apiClient.delete(`/leads/${id}`),
+  exportCsvUrl: (params?: Record<string, any>) => {
+    const qs = new URLSearchParams(params || {}).toString();
+    return `${API_URL}/leads/export/csv${qs ? `?${qs}` : ''}`;
+  },
+};
+
 // Health check
 export const health = () => apiClient.get('/health');
 

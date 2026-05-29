@@ -12,6 +12,7 @@ import { CompetitorAnalysisController } from './controllers/CompetitorAnalysisCo
 import { GoogleDriveController } from './controllers/GoogleDriveController';
 import { DashboardController } from './controllers/DashboardController';
 import { APIController } from './controllers/APIController';
+import { LeadGenController } from './controllers/LeadGenController';
 import { SchedulerService } from './services/SchedulerService';
 import { SeedDataService } from './services/SeedDataService';
 
@@ -61,6 +62,7 @@ const competitorController = new CompetitorAnalysisController();
 const googleDriveController = new GoogleDriveController();
 const dashboardController = new DashboardController();
 const apiController = new APIController();
+const leadGenController = new LeadGenController();
 
 // Health & Demo
 app.get('/health', (req, res) => {
@@ -257,6 +259,22 @@ app.get('/api/plans/:id', (req, res) =>
   apiController.getContentPlan(req, res)
 );
 
+// Lead Generation API (Yandex Maps parser)
+app.post('/api/leads/search', (req, res) =>
+  leadGenController.search(req, res)
+);
+app.get('/api/leads/stats', (req, res) =>
+  leadGenController.stats(req, res)
+);
+app.get('/api/leads/export/csv', (req, res) =>
+  leadGenController.exportCsv(req, res)
+);
+app.get('/api/leads', (req, res) => leadGenController.list(req, res));
+app.put('/api/leads/:id', (req, res) => leadGenController.update(req, res));
+app.delete('/api/leads/:id', (req, res) =>
+  leadGenController.remove(req, res)
+);
+
 app.listen(PORT, () => {
   console.log(`\n✅ WAI Social Agent running on port ${PORT}\n`);
   console.log(`🌐 Dashboard: http://localhost:${PORT}/demo`);
@@ -322,4 +340,12 @@ app.listen(PORT, () => {
   console.log(`   Content CRUD: POST|GET|PUT|DELETE /api/content/:id`);
   console.log(`   Social Accounts: GET /api/socials`);
   console.log(`   Content Plans: GET|POST /api/plans\n`);
+
+  console.log(`\n🎯 Lead Generation Endpoints (Yandex Maps):`);
+  console.log(`   Search Leads: POST /api/leads/search`);
+  console.log(`   List Leads: GET /api/leads?niche=...&hasWebsite=false`);
+  console.log(`   Lead Stats: GET /api/leads/stats`);
+  console.log(`   Export CSV: GET /api/leads/export/csv`);
+  console.log(`   Update Lead: PUT /api/leads/:id`);
+  console.log(`   Delete Lead: DELETE /api/leads/:id\n`);
 });

@@ -6,6 +6,7 @@ import { SocialAgent } from '../entities/SocialAgent';
 import { KnowledgeFile } from '../entities/KnowledgeFile';
 import { PublishingHistory } from '../entities/PublishingHistory';
 import { CompetitorAnalysis } from '../entities/CompetitorAnalysis';
+import { Lead } from '../entities/Lead';
 
 export const AppDataSourceSQLite = new DataSource({
   type: 'sqlite',
@@ -20,6 +21,7 @@ export const AppDataSourceSQLite = new DataSource({
     KnowledgeFile,
     PublishingHistory,
     CompetitorAnalysis,
+    Lead,
   ],
   migrations: [],
 });
