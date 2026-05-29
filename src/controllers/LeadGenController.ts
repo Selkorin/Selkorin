@@ -4,12 +4,16 @@ import { Lead } from '../entities/Lead';
 import { YandexMapsService } from '../services/YandexMapsService';
 import { TwoGisService } from '../services/TwoGisService';
 import { TwoGisScraperService } from '../services/TwoGisScraperService';
+import { VkService } from '../services/VkService';
+import { TelegramParserService } from '../services/TelegramParserService';
 import { LeadResult, saveLeads, dedupeLeads } from '../services/LeadStorage';
 
 export class LeadGenController {
   private yandex = new YandexMapsService();
   private twoGis = new TwoGisService();
   private twoGisScraper = new TwoGisScraperService();
+  private vk = new VkService();
+  private telegram = new TelegramParserService();
 
   /**
    * POST /api/leads/search
@@ -26,16 +30,17 @@ export class LeadGenController {
         ll,
         spn,
         url, // прямой URL поиска 2gis.ru (для скрапера)
+        usernames, // список каналов для Telegram-парсера
         noWebsiteOnly = false,
         limit,
         save = true,
         source = 'yandex',
       } = req.body;
 
-      if (!niche && !url) {
+      if (!niche && !url && !usernames) {
         return res.status(400).json({
           success: false,
-          error: 'Укажите нишу (niche), например "кофейня" (или url для скрапера 2ГИС)',
+          error: 'Укажите нишу (niche), либо url (2ГИС-скрапер), либо usernames (Telegram)',
         });
       }
 
@@ -51,6 +56,7 @@ export class LeadGenController {
       };
 
       const perSource: Record<string, number> = {};
+      const errors: Record<string, string> = {};
       let leads: LeadResult[] = [];
 
       const runYandex = async () => {
@@ -68,6 +74,16 @@ export class LeadGenController {
         perSource['2gis_scraper'] = r.total;
         leads.push(...r.leads);
       };
+      const runVk = async () => {
+        const r = await this.vk.search(baseParams);
+        perSource.vk = r.total;
+        leads.push(...r.leads);
+      };
+      const runTelegram = async () => {
+        const r = await this.telegram.search({ ...baseParams, usernames });
+        perSource.telegram = r.total;
+        leads.push(...r.leads);
+      };
 
       if (source === 'yandex') {
         await runYandex();
@@ -75,9 +91,23 @@ export class LeadGenController {
         await runTwoGis();
       } else if (source === '2gis_scraper') {
         await runScraper();
+      } else if (source === 'vk') {
+        await runVk();
+      } else if (source === 'telegram') {
+        await runTelegram();
       } else if (source === 'both') {
-        // Яндекс + 2ГИС API параллельно
-        await Promise.all([runYandex(), runTwoGis()]);
+        // Все API-источники параллельно; сбой одного не валит остальные
+        const tasks: Array<[string, () => Promise<void>]> = [
+          ['yandex', runYandex],
+          ['2gis', runTwoGis],
+          ['vk', runVk],
+        ];
+        const settled = await Promise.allSettled(tasks.map(([, fn]) => fn()));
+        settled.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            errors[tasks[i][0]] = r.reason?.message || String(r.reason);
+          }
+        });
       } else {
         return res.status(400).json({
           success: false,
@@ -98,6 +128,7 @@ export class LeadGenController {
         found: leads.length,
         saved,
         bySource: perSource,
+        errors: Object.keys(errors).length ? errors : undefined,
         leads,
       });
     } catch (error: any) {

@@ -54,8 +54,9 @@ export default function LeadGeneration() {
   const [noWebsiteOnly, setNoWebsiteOnly] = useState(false);
   const [limit, setLimit] = useState(50);
   const [source, setSource] = useState<
-    'yandex' | '2gis' | '2gis_scraper' | 'both'
+    'yandex' | '2gis' | '2gis_scraper' | 'vk' | 'telegram' | 'both'
   >('yandex');
+  const [usernames, setUsernames] = useState('');
 
   // Фильтры таблицы
   const [filterNoWebsite, setFilterNoWebsite] = useState(false);
@@ -101,14 +102,21 @@ export default function LeadGeneration() {
         limit: Number(limit),
         save: true,
         source,
+        usernames: usernames || undefined,
       });
+      const errs = res.data.errors
+        ? ' ⚠️ ' +
+          Object.entries(res.data.errors)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join('; ')
+        : '';
       const by = res.data.bySource
         ? ` (${Object.entries(res.data.bySource)
             .map(([k, v]) => `${k}: ${v}`)
             .join(', ')})`
         : '';
       setMessage(
-        `Найдено ${res.data.found}, сохранено новых: ${res.data.saved}.${by}`
+        `Найдено ${res.data.found}, сохранено новых: ${res.data.saved}.${by}${errs}`
       );
       await loadData();
     } catch (e: any) {
@@ -196,12 +204,27 @@ export default function LeadGeneration() {
           >
             <option value="yandex">Яндекс.Карты (API)</option>
             <option value="2gis">2ГИС (API)</option>
-            <option value="both">Яндекс + 2ГИС (оба API)</option>
+            <option value="vk">ВКонтакте (API)</option>
+            <option value="telegram">Telegram (каналы)</option>
+            <option value="both">Яндекс + 2ГИС + ВК (все API)</option>
             <option value="2gis_scraper">
               2ГИС скрапер (parser-2gis, без ключа)
             </option>
           </select>
         </div>
+        {source === 'telegram' && (
+          <div className="mb-4">
+            <label className="block text-sm text-gray-600 mb-1">
+              Каналы Telegram (через запятую/с новой строки) — если нет ключа TGStat
+            </label>
+            <textarea
+              placeholder="@channel1, t.me/channel2, channel3"
+              value={usernames}
+              onChange={(e) => setUsernames(e.target.value)}
+              className="border rounded-lg px-3 py-2 w-full h-20"
+            />
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="text"
