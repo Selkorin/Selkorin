@@ -20,7 +20,7 @@ export interface ContentFile {
 }
 
 export class GoogleDriveService {
-  private oauth2Client: OAuth2Client;
+  private oauth2Client: any;
   private drive: any;
   private contentFolderId: string | null = null;
 
@@ -74,8 +74,8 @@ export class GoogleDriveService {
     });
 
     if (res.data.files && res.data.files.length > 0) {
-      this.contentFolderId = res.data.files[0].id;
-      return this.contentFolderId;
+      this.contentFolderId = res.data.files[0].id ?? null;
+      return this.contentFolderId as string;
     }
 
     // Create new folder
@@ -87,8 +87,8 @@ export class GoogleDriveService {
       fields: 'id',
     });
 
-    this.contentFolderId = folderRes.data.id;
-    return this.contentFolderId;
+    this.contentFolderId = folderRes.data.id ?? null;
+    return this.contentFolderId as string;
   }
 
   // Upload content as JSON file

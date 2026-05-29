@@ -1,21 +1,23 @@
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# System deps for native modules (sqlite3) and curl healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy sources first so the postinstall build step has them
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY src ./src
 
-# Install dependencies
-RUN npm ci --only=production && npm run build
+# Installs deps and runs the build via the postinstall hook
+RUN npm install
 
-# Copy source
-COPY . .
+# Persisted SQLite data dir (used when USE_SQLITE=true)
+RUN mkdir -p /app/data
 
-# Build TypeScript
-RUN npm run build
-
-# Expose port
 EXPOSE 3000
 
-# Start app
 CMD ["npm", "start"]

@@ -197,7 +197,7 @@ export class APIController {
           'accountEmail',
           'status',
           'createdAt',
-        ],
+        ] as any,
       });
 
       res.json({
@@ -285,7 +285,7 @@ export class APIController {
         periodStart: new Date(periodStart),
         periodEnd: new Date(periodEnd),
         status: 'planning',
-      });
+      } as any);
 
       const saved = await planRepo.save(plan);
 

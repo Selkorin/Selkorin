@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/database';
 import { SocialAccount } from '../entities/SocialAccount';
 import { ContentItem } from '../entities/ContentItem';
+import { ContentPlan } from '../entities/ContentPlan';
 import { PublishingHistory } from '../entities/PublishingHistory';
 import { TelegramAdapter } from '../adapters/TelegramAdapter';
 import { InstagramAdapter } from '../adapters/InstagramAdapter';
@@ -18,13 +19,20 @@ export class PublishingService {
     }
 
     // Check approval status
-    if (contentItem.approvalRequired || contentItem.approvalStatus !== 'approved') {
+    if (
+      (contentItem as any).approvalRequired ||
+      contentItem.approvalStatus !== 'approved'
+    ) {
       throw new Error('Content not approved for publishing');
     }
 
     // Find the social account
-    const contentPlan = await AppDataSource.getRepository('ContentPlan')
-      .findOneBy({ id: contentItem.contentPlanId });
+    const contentPlan = await AppDataSource.getRepository(ContentPlan).findOneBy({
+      id: contentItem.contentPlanId,
+    });
+    if (!contentPlan) {
+      throw new Error('Content plan not found');
+    }
     const socialAccount = await socialAccountRepo.findOneBy({
       id: contentPlan.socialAccountId,
     });

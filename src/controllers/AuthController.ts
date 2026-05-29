@@ -33,7 +33,7 @@ export class AuthController {
       const result = await this.publishingService.connectSocialAccount('instagram', {
         accessToken,
         igUserId: userId,
-      });
+      } as any);
 
       // Redirect to success page
       res.redirect(

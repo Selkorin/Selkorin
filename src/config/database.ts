@@ -13,8 +13,8 @@ if (useSQLite) {
     database: process.env.DB_PATH || './data/wai.db',
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
-    entities: ['src/entities/**/*.ts'],
-    migrations: ['src/migrations/**/*.ts'],
+    entities: [__dirname + '/../entities/**/*.{ts,js}'],
+    migrations: [__dirname + '/../migrations/**/*.{ts,js}'],
   };
 } else {
   AppDataSourceConfig = {
@@ -26,8 +26,8 @@ if (useSQLite) {
     database: process.env.DB_NAME || 'wai_social_agent',
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
-    entities: ['src/entities/**/*.ts'],
-    migrations: ['src/migrations/**/*.ts'],
+    entities: [__dirname + '/../entities/**/*.{ts,js}'],
+    migrations: [__dirname + '/../migrations/**/*.{ts,js}'],
   };
 }
 

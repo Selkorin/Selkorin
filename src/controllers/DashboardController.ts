@@ -213,7 +213,7 @@ export class DashboardController {
         timeline[day].posts += 1;
         timeline[day].likes += h.metrics?.likes || 0;
         timeline[day].comments += h.metrics?.comments || 0;
-        timeline[day].reach += h.metrics?.reach || 0;
+        timeline[day].reach += (h.metrics as any)?.reach || 0;
       });
 
       // Platform analytics
@@ -240,7 +240,7 @@ export class DashboardController {
           totalPosts: data.length,
           totalLikes: data.reduce((sum, h) => sum + (h.metrics?.likes || 0), 0),
           totalComments: data.reduce((sum, h) => sum + (h.metrics?.comments || 0), 0),
-          totalReach: data.reduce((sum, h) => sum + (h.metrics?.reach || 0), 0),
+          totalReach: data.reduce((sum, h) => sum + ((h.metrics as any)?.reach || 0), 0),
           avgEngagement: Math.round(
             data.reduce(
               (sum, h) =>

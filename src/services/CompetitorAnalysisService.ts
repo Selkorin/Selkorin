@@ -361,7 +361,7 @@ Format as a professional competitive analysis report.
       priority: 'low',
     });
 
-    return recommendations;
+    return recommendations as any;
   }
 
   // Get analysis report

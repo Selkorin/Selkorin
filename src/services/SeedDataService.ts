@@ -77,7 +77,7 @@ export class SeedDataService {
     ];
 
     for (const account of accounts) {
-      await accountRepo.save(account);
+      await accountRepo.save(account as any);
     }
 
     console.log(`    ✓ Created ${accounts.length} social accounts`);
@@ -120,7 +120,7 @@ export class SeedDataService {
     ];
 
     for (const plan of plans) {
-      await planRepo.save(plan);
+      await planRepo.save(plan as any);
     }
 
     console.log(`    ✓ Created ${plans.length} content plans`);
@@ -247,7 +247,7 @@ export class SeedDataService {
     ];
 
     for (const item of items) {
-      await itemRepo.save(item);
+      await itemRepo.save(item as any);
     }
 
     console.log(`    ✓ Created ${items.length} content items`);
@@ -309,7 +309,7 @@ export class SeedDataService {
     ];
 
     for (const agent of agents) {
-      await agentRepo.save(agent);
+      await agentRepo.save(agent as any);
     }
 
     console.log(`    ✓ Created ${agents.length} social agents`);
@@ -493,7 +493,7 @@ RECOMMENDATIONS FOR COMPETITIVE ADVANTAGE:
     ];
 
     for (const history of histories) {
-      await historyRepo.save(history);
+      await historyRepo.save(history as any);
     }
 
     console.log(`    ✓ Created ${histories.length} publishing history entries`);

@@ -193,7 +193,7 @@ export class GoogleDriveController {
       const content = await contentRepo.findOneBy({ id: contentItemId });
 
       if (content) {
-        content.googleDriveFileId = null;
+        content.googleDriveFileId = null as any;
         await contentRepo.save(content);
       }
 
