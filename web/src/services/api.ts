@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Относительный путь по умолчанию: фронт берёт API с того же origin,
+// что и сам сайт (работает и локально, и на любом домене).
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,

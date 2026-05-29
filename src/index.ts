@@ -1,6 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { AppDataSource } from './config/database';
 import { WebhookController } from './controllers/WebhookController';
 import { DemoController } from './controllers/DemoController';
@@ -70,7 +72,14 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/demo', (req, res) => demoController.getDashboard(req, res));
-app.get('/', (req, res) => res.redirect('/demo'));
+app.get('/', (req, res, next) => {
+  // Если собран React-интерфейс — отдаём его (через express.static ниже),
+  // иначе показываем демо-дашборд.
+  if (fs.existsSync(path.join(__dirname, '../web/dist/index.html'))) {
+    return next();
+  }
+  res.redirect('/demo');
+});
 
 // Webhook
 app.post('/webhook/task', (req, res) => webhookController.handleTask(req, res));
@@ -274,6 +283,30 @@ app.put('/api/leads/:id', (req, res) => leadGenController.update(req, res));
 app.delete('/api/leads/:id', (req, res) =>
   leadGenController.remove(req, res)
 );
+
+// Serve the built React frontend (web/dist) from the same origin, if present.
+// Then the full UI (including the "Лиды" page) is available at the API origin.
+const webDist = path.join(__dirname, '../web/dist');
+if (fs.existsSync(path.join(webDist, 'index.html'))) {
+  app.use(express.static(webDist));
+
+  // SPA fallback for client-side routes (skip API/service prefixes)
+  const apiPrefixes = [
+    '/api', '/auth', '/webhook', '/publish', '/content', '/calendar',
+    '/history', '/analytics', '/scheduled', '/import', '/export',
+    '/schedules', '/analyze', '/analysis', '/analyses', '/drive',
+    '/health', '/demo',
+  ];
+  app.get('*', (req, res, next) => {
+    if (apiPrefixes.some(p => req.path === p || req.path.startsWith(p + '/'))) {
+      return next();
+    }
+    res.sendFile(path.join(webDist, 'index.html'));
+  });
+  console.log('🖥️  Serving React UI from web/dist');
+} else {
+  console.log('ℹ️  web/dist not found — UI not bundled (run the local script to build it)');
+}
 
 app.listen(PORT, () => {
   console.log(`\n✅ WAI Social Agent running on port ${PORT}\n`);
