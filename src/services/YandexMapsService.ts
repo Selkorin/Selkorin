@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { AppDataSource } from '../config/database';
-import { Lead } from '../entities/Lead';
+import { LeadResult, saveLeads } from './LeadStorage';
 
 /**
  * Параметры поиска компаний.
@@ -21,24 +20,6 @@ export interface LeadSearchParams {
   limit?: number;
   // Сохранять ли результаты в БД
   save?: boolean;
-}
-
-export interface LeadResult {
-  name: string;
-  category: string;
-  categories: string;
-  address: string;
-  phone: string;
-  website: string;
-  hasWebsite: boolean;
-  latitude: number | null;
-  longitude: number | null;
-  yandexUrl: string;
-  hours: string;
-  niche: string;
-  region: string;
-  source: 'yandex_maps';
-  rawData?: any;
 }
 
 /**
@@ -74,7 +55,7 @@ export class YandexMapsService {
   }> {
     if (!this.isConfigured()) {
       throw new Error(
-        'YANDEX_MAPS_API_KEY не задан. Получите ключ "JavaScript API и HTTP Геокодер / Geosearch" ' +
+        'YANDEX_MAPS_API_KEY не задан. Получите ключ Geosearch ' +
           'в кабинете https://developer.tech.yandex.ru/ и добавьте его в .env'
       );
     }
@@ -152,7 +133,7 @@ export class YandexMapsService {
 
     let saved = 0;
     if (params.save) {
-      saved = await this.saveLeads(collected);
+      saved = await saveLeads(collected);
     }
 
     return { total: collected.length, saved, leads: collected };
@@ -190,52 +171,12 @@ export class YandexMapsService {
       hasWebsite: Boolean(website),
       longitude: coords.length === 2 ? coords[0] : null,
       latitude: coords.length === 2 ? coords[1] : null,
-      yandexUrl: meta.id
-        ? `https://yandex.ru/maps/org/${meta.id}`
-        : '',
+      yandexUrl: meta.id ? `https://yandex.ru/maps/org/${meta.id}` : '',
       hours,
       niche: params.niche,
       region: params.region || '',
       source: 'yandex_maps',
       rawData: meta,
     };
-  }
-
-  /**
-   * Сохраняет лиды в БД, пропуская уже существующие (по названию+адресу).
-   */
-  private async saveLeads(leads: LeadResult[]): Promise<number> {
-    const repo = AppDataSource.getRepository(Lead);
-    let saved = 0;
-
-    for (const item of leads) {
-      const existing = await repo.findOne({
-        where: { name: item.name, address: item.address },
-      });
-      if (existing) continue;
-
-      const lead = repo.create({
-        name: item.name,
-        category: item.category,
-        categories: item.categories,
-        address: item.address,
-        phone: item.phone,
-        website: item.website,
-        hasWebsite: item.hasWebsite,
-        latitude: item.latitude ?? undefined,
-        longitude: item.longitude ?? undefined,
-        yandexUrl: item.yandexUrl,
-        hours: item.hours,
-        niche: item.niche,
-        region: item.region,
-        source: item.source,
-        status: 'new',
-        rawData: item.rawData,
-      });
-      await repo.save(lead);
-      saved++;
-    }
-
-    return saved;
   }
 }

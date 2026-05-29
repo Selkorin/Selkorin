@@ -62,6 +62,8 @@ export const leads = {
     noWebsiteOnly?: boolean;
     limit?: number;
     save?: boolean;
+    source?: 'yandex' | '2gis' | '2gis_scraper' | 'both';
+    url?: string;
   }) => apiClient.post('/leads/search', data),
   list: (params?: {
     niche?: string;

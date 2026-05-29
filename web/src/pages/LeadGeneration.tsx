@@ -53,6 +53,9 @@ export default function LeadGeneration() {
   const [region, setRegion] = useState('');
   const [noWebsiteOnly, setNoWebsiteOnly] = useState(false);
   const [limit, setLimit] = useState(50);
+  const [source, setSource] = useState<
+    'yandex' | '2gis' | '2gis_scraper' | 'both'
+  >('yandex');
 
   // Фильтры таблицы
   const [filterNoWebsite, setFilterNoWebsite] = useState(false);
@@ -97,9 +100,15 @@ export default function LeadGeneration() {
         noWebsiteOnly,
         limit: Number(limit),
         save: true,
+        source,
       });
+      const by = res.data.bySource
+        ? ` (${Object.entries(res.data.bySource)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(', ')})`
+        : '';
       setMessage(
-        `Найдено ${res.data.found}, сохранено новых: ${res.data.saved}.`
+        `Найдено ${res.data.found}, сохранено новых: ${res.data.saved}.${by}`
       );
       await loadData();
     } catch (e: any) {
@@ -178,6 +187,21 @@ export default function LeadGeneration() {
         <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
           <Search size={20} /> Новый сбор
         </h2>
+        <div className="mb-4">
+          <label className="block text-sm text-gray-600 mb-1">Источник</label>
+          <select
+            value={source}
+            onChange={(e) => setSource(e.target.value as any)}
+            className="border rounded-lg px-3 py-2 w-full md:w-72"
+          >
+            <option value="yandex">Яндекс.Карты (API)</option>
+            <option value="2gis">2ГИС (API)</option>
+            <option value="both">Яндекс + 2ГИС (оба API)</option>
+            <option value="2gis_scraper">
+              2ГИС скрапер (parser-2gis, без ключа)
+            </option>
+          </select>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="text"

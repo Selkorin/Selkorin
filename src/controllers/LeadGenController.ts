@@ -2,13 +2,21 @@ import { Request, Response } from 'express';
 import { AppDataSource } from '../config/database';
 import { Lead } from '../entities/Lead';
 import { YandexMapsService } from '../services/YandexMapsService';
+import { TwoGisService } from '../services/TwoGisService';
+import { TwoGisScraperService } from '../services/TwoGisScraperService';
+import { LeadResult, saveLeads, dedupeLeads } from '../services/LeadStorage';
 
 export class LeadGenController {
   private yandex = new YandexMapsService();
+  private twoGis = new TwoGisService();
+  private twoGisScraper = new TwoGisScraperService();
 
   /**
    * POST /api/leads/search
-   * Собирает компании через Yandex Places API и сохраняет в БД.
+   * Собирает компании из выбранного источника (Яндекс / 2ГИС API /
+   * 2ГИС скрапер / все сразу) и сохраняет в БД.
+   *
+   * body.source: 'yandex' | '2gis' | '2gis_scraper' | 'both' (по умолчанию 'yandex')
    */
   async search(req: Request, res: Response) {
     try {
@@ -17,33 +25,80 @@ export class LeadGenController {
         region,
         ll,
         spn,
+        url, // прямой URL поиска 2gis.ru (для скрапера)
         noWebsiteOnly = false,
         limit,
         save = true,
+        source = 'yandex',
       } = req.body;
 
-      if (!niche) {
+      if (!niche && !url) {
         return res.status(400).json({
           success: false,
-          error: 'Укажите нишу (niche), например "кофейня"',
+          error: 'Укажите нишу (niche), например "кофейня" (или url для скрапера 2ГИС)',
         });
       }
 
-      const result = await this.yandex.search({
+      const baseParams = {
         niche,
         region,
         ll,
         spn,
         noWebsiteOnly: Boolean(noWebsiteOnly),
         limit: limit ? Number(limit) : undefined,
-        save: Boolean(save),
-      });
+        // при объединении источников сохраняем один раз в контроллере
+        save: false,
+      };
+
+      const perSource: Record<string, number> = {};
+      let leads: LeadResult[] = [];
+
+      const runYandex = async () => {
+        const r = await this.yandex.search(baseParams);
+        perSource.yandex = r.total;
+        leads.push(...r.leads);
+      };
+      const runTwoGis = async () => {
+        const r = await this.twoGis.search(baseParams);
+        perSource['2gis'] = r.total;
+        leads.push(...r.leads);
+      };
+      const runScraper = async () => {
+        const r = await this.twoGisScraper.search({ ...baseParams, url });
+        perSource['2gis_scraper'] = r.total;
+        leads.push(...r.leads);
+      };
+
+      if (source === 'yandex') {
+        await runYandex();
+      } else if (source === '2gis') {
+        await runTwoGis();
+      } else if (source === '2gis_scraper') {
+        await runScraper();
+      } else if (source === 'both') {
+        // Яндекс + 2ГИС API параллельно
+        await Promise.all([runYandex(), runTwoGis()]);
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: `Неизвестный источник: ${source}`,
+        });
+      }
+
+      // Дедупликация между источниками
+      leads = dedupeLeads(leads);
+
+      let saved = 0;
+      if (save) {
+        saved = await saveLeads(leads);
+      }
 
       res.json({
         success: true,
-        found: result.total,
-        saved: result.saved,
-        leads: result.leads,
+        found: leads.length,
+        saved,
+        bySource: perSource,
+        leads,
       });
     } catch (error: any) {
       console.error('Lead search error:', error.message);
