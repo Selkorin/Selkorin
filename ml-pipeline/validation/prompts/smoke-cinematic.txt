@@ -1,0 +1,42 @@
+# Validation Prompts for smoke-cinematic LoRA
+# Use these to evaluate quality at each training checkpoint
+# Expected: All should show smoke, dark tones, cinematic aesthetic
+
+## Minimal Complexity (quick quality check)
+smokecinematic style, dark photo with smoke
+smokecinematic, moody atmosphere with volumetric effects
+smokecinematic style, cinematic smoke and shadows
+
+## Standard Complexity (main validation set)
+smokecinematic style, person silhouette in thick volumetric smoke, dark moody atmosphere, professional lighting
+smokecinematic, dark moody room with heavy atmospheric smoke and neon accents, cinematic color grade
+smokecinematic style, cinematic smoke effect with dramatic professional lighting, noir aesthetic
+smokecinematic, abstract dark smoke patterns in noir atmosphere, deep blacks and shadows
+smokecinematic style, smoke and shadows forming shapes, sophisticated composition, depth
+
+## High Complexity (detailed prompts)
+smokecinematic, premium dark product photography with volumetric smoke effects, gold and blue lighting, luxury aesthetic
+smokecinematic style, dark cinematic interior scene with thick atmospheric smoke, volumetric light rays, professional color grading
+smokecinematic, fog and smoke with professional color grading, chiaroscuro lighting, sophisticated palette
+smokecinematic style, noir style image with heavy smoke, dramatic backlighting, deep tones, cinematic feel
+smokecinematic, abstract smoke formations with volumetric lighting, moody dark atmosphere, premium aesthetic
+
+## Edge Cases (challenging scenarios)
+smokecinematic style, minimal smoke with dark background
+smokecinematic, multiple subjects in heavy smoke
+smokecinematic style, colored smoke with dramatic lighting
+smokecinematic, close-up smoke texture detail
+smokecinematic style, wide cinematic landscape with atmospheric smoke
+
+## Quality Scoring Rubric
+Score 0-10:
+9-10: Perfect - strong smoke effect, dark cinematic mood, no artifacts
+7-8: Good - clear smoke effect, correct mood, minor artifacts
+5-6: Acceptable - smoke visible but weak, mood partially correct
+3-4: Poor - barely visible smoke, wrong mood, some artifacts
+0-2: Fail - no smoke effect, bright/wrong aesthetic, many artifacts
+
+## Storage
+- Save generated images to: validation/results/{checkpoint_step}/
+- Example: validation/results/step_500/prompt_1.png
+- Save metrics to: validation/results/{checkpoint_step}/metrics.json

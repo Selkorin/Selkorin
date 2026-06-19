@@ -1,0 +1,49 @@
+{
+  "name": "smoke-cinematic-flux-v1",
+  "version": "draft",
+  "created": "2026-06-20",
+  "status": "collecting_images",
+  "total_images": 0,
+  "target_images": 250,
+  "image_resolution": 768,
+
+  "trigger_words": [
+    "smokecinematic",
+    "darkcinematic",
+    "volumetricsmoke",
+    "moodylighting"
+  ],
+
+  "description": "Professional cinematic dark photography with volumetric smoke effects, moody lighting, and premium aesthetic. Includes various smoke effects, lighting setups, and atmospheric conditions.",
+
+  "style_guide": {
+    "primary": "dark cinematic photograph with volumetric smoke",
+    "mood": "moody, noir, atmospheric",
+    "lighting": "dramatic, backlighting, volumetric light rays",
+    "aesthetic": "premium, professional, cinematic color grade",
+    "technical": "high detail, sharp focus, rich blacks, sophisticated contrast"
+  },
+
+  "sources": {
+    "unsplash": 0,
+    "pexels": 0,
+    "pixabay": 0,
+    "custom": 0
+  },
+
+  "quality_metrics": {
+    "diversity_score": 0.0,
+    "consistency_score": 0.0,
+    "quality_score": 0.0,
+    "status": "pending"
+  },
+
+  "next_steps": [
+    "1. Collect 250 images from Unsplash, Pexels, Pixabay",
+    "2. Check licenses (CC0, CC-BY preferred)",
+    "3. Run preprocessing script (resize to 768x768)",
+    "4. Generate captions (2-3 per image)",
+    "5. Run quality validation",
+    "6. Create training config"
+  ]
+}

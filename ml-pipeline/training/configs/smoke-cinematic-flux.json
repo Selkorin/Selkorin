@@ -1,0 +1,89 @@
+{
+  "model_name": "flux.1[pro]",
+  "model_type": "flux",
+  "training_purpose": "Create SEVAS smoke-cinematic style LoRA",
+
+  "dataset": {
+    "train_data_dir": "../datasets/smoke-cinematic/processed",
+    "caption_prefix": "",
+    "caption_dropout_rate": 0.05,
+    "random_flip": true,
+    "center_crop": false
+  },
+
+  "training": {
+    "pretrained_model_name_or_path": "black-forest-labs/FLUX.1-pro",
+    "output_dir": "./results",
+    "seed": 42,
+    "height": 768,
+    "width": 768,
+
+    "train_batch_size": 2,
+    "gradient_accumulation_steps": 2,
+    "num_train_epochs": 50,
+    "max_train_steps": 8000,
+
+    "learning_rate": 0.0001,
+    "lr_scheduler": "linear",
+    "lr_warmup_steps": 500,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_epsilon": 1e-8,
+    "adam_weight_decay": 0.01,
+    "max_grad_norm": 1.0,
+
+    "checkpointing_steps": 500,
+    "validation_steps": 500,
+    "validation_prompt": "smokecinematic style, dark cinematic photo with volumetric smoke, professional moody lighting",
+    "num_validation_images": 3,
+    "validation_guidance_scale": 7.5,
+
+    "logging_dir": "./logs",
+    "log_with": "tensorboard",
+    "logging_steps": 100,
+
+    "enable_xformers_memory_efficient_attention": true,
+    "mixed_precision": "fp16",
+    "gradient_checkpointing": true,
+    "use_8bit_adam": true,
+
+    "optimizer": "adamw8bit",
+    "num_workers": 4
+  },
+
+  "lora_config": {
+    "r": 32,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": [
+      "to_q",
+      "to_k",
+      "to_v",
+      "to_out.0",
+      "ff.net.0.proj",
+      "ff.net.2"
+    ]
+  },
+
+  "validation_prompts": [
+    "smokecinematic style, person silhouette in thick volumetric smoke, dark moody atmosphere",
+    "smokecinematic, dark moody room with heavy atmospheric smoke and neon accents",
+    "smokecinematic style, cinematic smoke effect with dramatic professional lighting",
+    "smokecinematic, abstract dark smoke patterns in noir atmosphere",
+    "smokecinematic style, smoke and shadows forming shapes, deep blacks and grays",
+    "smokecinematic, premium dark product photography with volumetric smoke effects",
+    "smokecinematic style, dark cinematic interior scene with thick atmospheric smoke",
+    "smokecinematic, fog and smoke with professional color grading and depth",
+    "smokecinematic style, noir style image with heavy smoke and chiaroscuro lighting",
+    "smokecinematic, volumetric light rays piercing through thick dark smoke"
+  ],
+
+  "hardware_requirements": {
+    "estimated_vram": "24GB (RTX 4090) or 32GB (with optimizations)",
+    "estimated_duration": "8-12 hours on RTX 4090",
+    "estimated_cost": "$20-30 on Lambda Labs GPU",
+    "alternative_cloud": "Lambda Labs RTX A100 ($1.99/hr), Fal.ai, Replicate"
+  },
+
+  "notes": "This is LoRA training config. File will be passed to Kohya SS or diffusers training script. Monitor loss graphs and validation metrics at each checkpoint. Select best checkpoint based on validation quality (visual inspection), not lowest loss (risk of overfitting)."
+}
