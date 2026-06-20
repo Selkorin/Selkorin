@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import Combine
 
 // ============================================================
 // FloatingOrbView — content of the transparent orb window.
@@ -10,33 +9,9 @@ import Combine
 @MainActor
 final class FloatingOrbModel: ObservableObject {
     @Published var size: CGFloat
-    @Published var cloudVisible = false
-    private var hideWorkItem: DispatchWorkItem?
-    private var statusCancellable: AnyCancellable?
 
-    init(size: CGFloat, store: AgentStore) {
+    init(size: CGFloat) {
         self.size = size
-        // Subscribe directly — fires synchronously in @Published willSet on MainActor.
-        // No receive(on:) so the sink runs in the same run-loop iteration as the
-        // status change, before SwiftUI renders. This guarantees cloudVisible is true
-        // in the same render pass that shows stateText, even for brief status changes.
-        statusCancellable = store.$status
-            .dropFirst()
-            .sink { [weak self] status in self?.handleStatus(status) }
-    }
-
-    private func handleStatus(_ status: AgentStatusLabel) {
-        if status != .ready {
-            cloudVisible = true
-            hideWorkItem?.cancel()
-            let item = DispatchWorkItem { [weak self] in self?.cloudVisible = false }
-            hideWorkItem = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: item)
-        } else {
-            hideWorkItem?.cancel()
-            hideWorkItem = nil
-            cloudVisible = false
-        }
     }
 }
 
@@ -155,8 +130,8 @@ struct FloatingOrbView: View {
         HStack(spacing: 10) {
             orbArea
 
-            if model.cloudVisible, let text = stateText {
-                stateCloud(text)
+            if let stateText {
+                stateCloud(stateText)
                     .transition(
                         .opacity.combined(
                             with: .scale(scale: 0.92, anchor: .leading)
@@ -166,7 +141,7 @@ struct FloatingOrbView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .animation(WAI.easeOut, value: model.cloudVisible)
+        .animation(WAI.easeOut, value: store.status)
         .overlay(
             WidgetInteractionLayer(
                 currentSize: model.size,
