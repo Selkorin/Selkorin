@@ -24,9 +24,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // No persistent menu — left-click fires action directly.
         // Right-click / ctrl-click opens menu via event check.
+        // sendAction(on:) is REQUIRED for a status bar button to fire its
+        // action on click; without it the button only highlights.
         if let button = statusItem.button {
             button.target = self
             button.action = #selector(handleClick(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
     }
 
