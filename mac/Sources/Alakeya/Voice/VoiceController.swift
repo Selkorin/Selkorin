@@ -28,21 +28,27 @@ final class VoiceController {
     }
 
     func start() {
-        guard !listening else { return }
+        print("[VOICE] start() called, listening=\(listening)")
+        guard !listening else { print("[VOICE] already listening, returning"); return }
         recognizer.localOnly = store.settings.voice.localOnly
         Task { @MainActor in
-            // Request microphone lazily here, so the app works via `swift run`
-            // (no Info.plist in bundle) without crashing on startup.
-            _ = await PermissionsManager.shared.requestMicrophone()
-            guard await recognizer.requestAuthorization() else {
+            print("[VOICE] Task started")
+            let micOK = await PermissionsManager.shared.requestMicrophone()
+            print("[VOICE] microphone permission: \(micOK)")
+            let speechOK = await recognizer.requestAuthorization()
+            print("[VOICE] speech authorization: \(speechOK)")
+            guard speechOK else {
                 store.showError("Нет доступа к распознаванию речи.", blocked: true); return
             }
             do {
                 store.transcript = ""
                 store.setStatus(.listening)
+                print("[VOICE] status set to listening, starting recognizer")
                 try recognizer.start()
                 listening = true
+                print("[VOICE] recognizer started OK")
             } catch {
+                print("[VOICE] recognizer.start() threw: \(error)")
                 store.showError("Не удалось включить микрофон.", blocked: false)
             }
         }
