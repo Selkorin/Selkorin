@@ -9,26 +9,9 @@ import AppKit
 @MainActor
 final class FloatingOrbModel: ObservableObject {
     @Published var size: CGFloat
-    @Published var cloudVisible = false
-    private var hideTask: Task<Void, Never>?
 
     init(size: CGFloat) {
         self.size = size
-    }
-
-    func showCloudBriefly() {
-        cloudVisible = true
-        hideTask?.cancel()
-        hideTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            guard !Task.isCancelled else { return }
-            self?.cloudVisible = false
-        }
-    }
-
-    func hideCloud() {
-        hideTask?.cancel()
-        cloudVisible = false
     }
 }
 
@@ -143,11 +126,13 @@ struct FloatingOrbView: View {
     var onResize: ((CGFloat, Bool) -> Void)?
     var onMove: ((NSPoint, Bool) -> Void)?
 
+    @State private var cloudTimedOut = false
+
     var body: some View {
         HStack(spacing: 10) {
             orbArea
 
-            if model.cloudVisible, let text = stateText {
+            if let text = stateText, !cloudTimedOut {
                 stateCloud(text)
                     .transition(
                         .opacity.combined(
@@ -158,7 +143,8 @@ struct FloatingOrbView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .animation(WAI.easeOut, value: model.cloudVisible)
+        .animation(WAI.easeOut, value: store.status)
+        .animation(WAI.easeOut, value: cloudTimedOut)
         .overlay(
             WidgetInteractionLayer(
                 currentSize: model.size,
@@ -167,15 +153,14 @@ struct FloatingOrbView: View {
                 onMove: onMove
             )
         )
-        .onAppear {
-            if stateText != nil { model.showCloudBriefly() }
-        }
-        .onChange(of: store.status) { _, _ in
-            if stateText != nil {
-                model.showCloudBriefly()
-            } else {
-                model.hideCloud()
+        .task(id: store.status) {
+            guard stateText != nil else {
+                cloudTimedOut = false
+                return
             }
+            cloudTimedOut = false
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            cloudTimedOut = true
         }
     }
 
