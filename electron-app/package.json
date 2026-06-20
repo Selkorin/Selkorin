@@ -1,0 +1,35 @@
+{
+  "name": "alakeia",
+  "version": "1.0.0",
+  "description": "Алакея - умный голосовой ассистент",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "install-icon": "node scripts/install-desktop.js"
+  },
+  "build": {
+    "appId": "com.selkorin.alakeia",
+    "productName": "Алакея",
+    "icon": "assets/icon.png",
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}
