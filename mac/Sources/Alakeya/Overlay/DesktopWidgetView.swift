@@ -153,7 +153,7 @@ struct FloatingOrbView: View {
                 onMove: onMove
             )
         )
-        .onChange(of: store.status) { newStatus in
+        .onChange(of: store.status) { _, _ in
             if stateText != nil {
                 showCloudBriefly()
             } else {
