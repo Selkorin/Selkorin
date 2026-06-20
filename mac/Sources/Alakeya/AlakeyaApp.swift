@@ -51,7 +51,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         statusBar.onToggleWidget = { [weak self] in
-            self?.orbController.show()
+            guard let self else { return }
+            if self.store.status == .listening {
+                self.voice.stop()
+                self.orbController.hide()
+            } else {
+                self.orbController.show()
+                self.voice.start()
+            }
         }
 
         statusBar.onOpenSettings = { [weak self] in
