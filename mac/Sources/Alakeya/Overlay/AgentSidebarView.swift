@@ -181,6 +181,20 @@ struct AgentSidebarView: View {
                 }
                 .buttonStyle(.plain)
 
+                if showsExpandedNavigation {
+                    Button {
+                        doCreateChat(id, name: name)
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(WAI.textDim)
+                            .frame(width: 28, height: 48)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Новый чат с \(name)")
+                }
+
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         if isExpanded { expandedAgentIDs.remove(id) }
@@ -190,7 +204,7 @@ struct AgentSidebarView: View {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(isExpanded ? WAI.accentBright : WAI.textMuted)
-                        .frame(width: 34, height: 48)
+                        .frame(width: 28, height: 48)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

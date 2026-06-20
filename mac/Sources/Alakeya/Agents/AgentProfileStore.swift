@@ -113,6 +113,14 @@ final class AgentProfileStore: ObservableObject {
         SkillStore.shared.reload()
     }
 
+    func delete(_ id: String) {
+        agents.removeAll { $0.id == id }
+        let skillURL = skillsDirectory.appendingPathComponent("\(id).md")
+        try? FileManager.default.removeItem(at: skillURL)
+        try? persist()
+        SkillStore.shared.reload()
+    }
+
     func resolvedSettings(base: Settings, activeAgentID: String) -> Settings {
         guard let profile = profile(for: activeAgentID) else { return base }
         var result = base

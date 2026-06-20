@@ -93,7 +93,7 @@ struct ChatView: View {
                     HStack(spacing: 0) {
                         // ── Chat area — always fills remaining space ───────
                         HStack(spacing: 0) {
-                            if navigationExpanded {
+                            if navigationExpanded && !store.showSettings {
                                 AgentSidebarView(
                                     store: store,
                                     agentsOpen: $agentsOpen,
@@ -115,6 +115,7 @@ struct ChatView: View {
                                         onClose: { store.showSettings = false },
                                         tab: $settingsTab
                                     )
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 } else if agentsOpen {
                                     AgentWorkspaceView(store: store) {
                                         agentsOpen = false
@@ -454,50 +455,15 @@ struct ChatView: View {
     private var chatEmptyState: some View {
         GeometryReader { geo in
             let compactHeight = geo.size.height < 590
-            let compactWidth = geo.size.width < 720
-            let heroSize: CGFloat = compactHeight ? 72 : (compactWidth ? 88 : 104)
-            let columnCount = geo.size.width >= 900 ? 3 : (geo.size.width >= 560 ? 2 : 1)
-            let actionColumns = Array(
-                repeating: GridItem(.flexible(minimum: 150, maximum: 280), spacing: 10),
-                count: columnCount
-            )
+            let heroSize: CGFloat = (compactHeight ? 72 : 104) * 0.9
 
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    welcomeAvatar(size: heroSize)
-                        .frame(width: heroSize, height: heroSize)
-                        .padding(.top, compactHeight ? 6 : 14)
-
-                    Text(welcomeTitle)
-                        .font(.system(size: compactHeight ? 21 : 25, weight: .semibold))
-                        .foregroundStyle(WAI.text)
-                        .padding(.top, compactHeight ? 8 : 12)
-                        .multilineTextAlignment(.center)
-
-                    Text("Чем займёмся сегодня?")
-                        .font(.system(size: compactHeight ? 14 : 17))
-                        .foregroundStyle(WAI.textMuted)
-                        .padding(.top, 6)
-
-                    LazyVGrid(
-                        columns: actionColumns,
-                        spacing: 10
-                    ) {
-                        quickAction("lightbulb", "Придумать идею") { text = "Помоги придумать идею для " }
-                        quickAction("photo", "Создать изображение") { text = "Создай изображение: "; focused = true }
-                        quickAction("pencil", "Написать текст") { text = "Напиши текст для " }
-                        quickAction("magnifyingglass", "Поиск в интернете") { text = "Найди информацию: " }
-                        quickAction("doc.text", "Создать документ") { text = "Создай документ: " }
-                        quickAction("wrench", "Анализ данных") { text = "Проанализируй данные: " }
-                    }
-                    .padding(.top, compactHeight ? 12 : 20)
-                    .frame(maxWidth: columnCount == 3 ? 840 : (columnCount == 2 ? 560 : 300))
-                }
-                .padding(.horizontal, compactWidth ? 16 : 28)
-                .padding(.bottom, compactHeight ? 10 : 18)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: geo.size.height, alignment: .top)
+            VStack {
+                Spacer()
+                welcomeAvatar(size: heroSize)
+                    .frame(width: heroSize, height: heroSize)
+                Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -537,12 +503,7 @@ struct ChatView: View {
                 )
                 .shadow(color: WAI.accentGlow.opacity(0.24), radius: 14)
         } else {
-            OrbView(
-                state: store.assistantState,
-                emotion: store.orbEmotion,
-                size: size
-            )
-            .frame(width: size, height: size)
+            personaAsset(size: size)
         }
     }
 
@@ -601,7 +562,26 @@ struct ChatView: View {
 
     private func inputBar(chatW: CGFloat) -> some View {
         let hasText = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return HStack(spacing: 12) {
+        return HStack(spacing: 8) {
+            Button {
+                let panel = NSOpenPanel()
+                panel.allowsMultipleSelection = true
+                panel.canChooseFiles = true
+                panel.canChooseDirectories = false
+                panel.begin { response in
+                    if response == .OK {
+                        attachments.append(contentsOf: panel.urls)
+                    }
+                }
+            } label: {
+                Image(systemName: "paperclip")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(WAI.textDim)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
+            .help("Прикрепить файл")
+
             TextField("Напишите сообщение...", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))

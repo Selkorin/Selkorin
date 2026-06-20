@@ -8,6 +8,8 @@ struct AgentWorkspaceView: View {
 
     @State private var showsCreateAgent = false
     @State private var editingAvatarFor: AgentProfile?
+    @State private var editingAgent: AgentProfile?
+    @State private var agentToDelete: AgentProfile?
 
     var body: some View {
         ScrollView {
@@ -60,6 +62,28 @@ struct AgentWorkspaceView: View {
             ) { data in
                 try profiles.setAgentAvatar(data, agentID: agent.id)
             }
+        }
+        .sheet(item: $editingAgent) { agent in
+            EditAgentSheet(store: store, profile: agent)
+        }
+        .confirmationDialog(
+            "Удалить агента «\(agentToDelete?.name ?? "")»?",
+            isPresented: Binding(
+                get: { agentToDelete != nil },
+                set: { if !$0 { agentToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Удалить", role: .destructive) {
+                if let agent = agentToDelete {
+                    AgentProfileStore.shared.delete(agent.id)
+                    if store.settings.models.activeSkillID == agent.id {
+                        store.newChat(agentId: "general")
+                    }
+                }
+                agentToDelete = nil
+            }
+            Button("Отмена", role: .cancel) { agentToDelete = nil }
         }
     }
 
@@ -129,6 +153,26 @@ struct AgentWorkspaceView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Создать аватар")
+
+                Button { editingAgent = agent } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(WAI.textDim)
+                        .frame(width: 34, height: 34)
+                        .background(RoundedRectangle(cornerRadius: 9).fill(WAI.surfaceInset))
+                        .overlay(RoundedRectangle(cornerRadius: 9).stroke(WAI.line))
+                }
+                .buttonStyle(.plain)
+                .help("Редактировать агента")
+
+                Button { agentToDelete = agent } label: {
+                    Image(systemName: "trash")
+                        .foregroundStyle(WAI.danger)
+                        .frame(width: 34, height: 34)
+                        .background(RoundedRectangle(cornerRadius: 9).fill(WAI.surfaceInset))
+                        .overlay(RoundedRectangle(cornerRadius: 9).stroke(WAI.line))
+                }
+                .buttonStyle(.plain)
+                .help("Удалить агента")
             }
             Button(action: action) {
                 Image(systemName: "bubble.left.fill")
