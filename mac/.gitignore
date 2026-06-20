@@ -1,0 +1,10 @@
+.build/
+build/*.app
+build/*.zip
+.DS_Store
+*.xcodeproj
+.swiftpm/
+
+# Silero Local TTS
+.venv/
+*.wav

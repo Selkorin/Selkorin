@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sparkle 2 appcast template. Use this when Sparkle integration is complete.
+     Generate sparkle:edSignature with: sign_update Alakeya-VERSION.zip (from Sparkle tools)
+     Never commit the private EdDSA key — keep it in CI secrets or local keychain only. -->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Alakeya</title>
+        <link>https://updates.selkorin.com/alakeya/appcast.xml</link>
+        <description>Alakeya update feed</description>
+        <language>ru</language>
+
+        <item>
+            <title>Alakeya 0.6.0</title>
+            <pubDate>Thu, 19 Jun 2026 12:00:00 +0000</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.6.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <ul>
+                    <li>Исправлены ошибки при работе с Connectors</li>
+                    <li>Улучшена стабильность голосового ввода</li>
+                    <li>Добавлен раздел Обновления в Settings</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://releases.selkorin.com/alakeya/Alakeya-0.6.0.zip"
+                sparkle:edSignature="TODO_REPLACE_WITH_SIGN_UPDATE_OUTPUT"
+                length="0"
+                type="application/octet-stream"/>
+        </item>
+
+    </channel>
+</rss>

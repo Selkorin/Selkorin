@@ -1,0 +1,8 @@
+{
+  "version": "0.6.0",
+  "build": "6",
+  "channel": "stable",
+  "releaseNotes": "— Исправлены ошибки при работе с Connectors\n— Улучшена стабильность голосового ввода\n— Добавлен раздел Обновления в Settings",
+  "downloadURL": "https://releases.selkorin.com/alakeya/Alakeya-0.6.0.zip",
+  "minOSVersion": "14.0"
+}

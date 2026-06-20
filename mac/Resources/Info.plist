@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Alakeya</string>
+  <key>CFBundleDisplayName</key>
+  <string>Alakeya</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.selkorin.alakeya</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.6.0</string>
+  <key>CFBundleVersion</key>
+  <string>6</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>© 2026 Selkorin. All rights reserved.</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>14.0</string>
+
+  <!-- Regular macOS app: visible in Dock and app switcher. -->
+  <key>LSUIElement</key>
+  <false/>
+
+  <!-- TCC usage descriptions (DOC1/DOC2 permission perimeter). -->
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Alakeya использует микрофон для голосовых команд.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Alakeya распознаёт вашу речь, чтобы понимать голосовые задачи.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Alakeya управляет приложениями через Apple Events по вашему запросу.</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>Alakeya читает и управляет интерфейсом активного окна по вашему запросу.</string>
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>Alakeya делает снимок экрана для контекстного понимания задачи.</string>
+</dict>
+</plist>

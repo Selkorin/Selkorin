@@ -1,0 +1,409 @@
+import SwiftUI
+
+struct AgentWorkspaceView: View {
+    @ObservedObject var store: AgentStore
+    @ObservedObject private var agents = AgentProfileStore.shared
+    @ObservedObject private var profiles = ProfileStore.shared
+    var onStartChat: () -> Void
+
+    @State private var showsCreateAgent = false
+    @State private var editingAvatarFor: AgentProfile?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                header
+                agentRow(
+                    id: "general",
+                    name: "Алакея",
+                    subtitle: "Основной помощник · активная модель",
+                    isActive: store.settings.models.activeSkillID == "general",
+                    canEditAvatar: false
+                ) {
+                    activate("general")
+                }
+
+                ForEach(agents.agents) { agent in
+                    agentRow(
+                        id: agent.id,
+                        name: agent.name,
+                        subtitle: "\(providerName(agent.providerID)) · \(agent.modelName)",
+                        isActive: store.settings.models.activeSkillID == agent.id,
+                        canEditAvatar: true
+                    ) {
+                        activate(agent.id)
+                    }
+                }
+
+                createAgentCard
+            }
+            .frame(maxWidth: 900)
+            .padding(32)
+            .frame(maxWidth: .infinity, alignment: .top)
+        }
+        .background(WAI.canvas)
+        .onAppear { agents.reload() }
+        .sheet(isPresented: $showsCreateAgent) {
+            CreateAgentSheet(store: store) { profile, avatarData in
+                if let avatarData {
+                    try? profiles.setAgentAvatar(avatarData, agentID: profile.id)
+                }
+                activate(profile.id)
+                showsCreateAgent = false
+            }
+        }
+        .sheet(item: $editingAvatarFor) { agent in
+            AvatarEditorView(
+                store: store,
+                title: "Аватар агента «\(agent.name)»",
+                initialImage: profiles.agentAvatar(for: agent.id)
+            ) { data in
+                try profiles.setAgentAvatar(data, agentID: agent.id)
+            }
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Мои агенты")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(WAI.text)
+            Text("Профили Алакеи со своими инструкциями, навыками и моделью.")
+                .font(.system(size: 13))
+                .foregroundStyle(WAI.textMuted)
+        }
+    }
+
+    private var createAgentCard: some View {
+        Button { showsCreateAgent = true } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus")
+                Text("Создать агента")
+                    .font(.system(size: 13.5, weight: .semibold))
+            }
+            .foregroundStyle(WAI.textDim)
+            .frame(maxWidth: .infinity)
+            .frame(height: 62)
+            .background(RoundedRectangle(cornerRadius: 14).fill(WAI.surfaceInset))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(WAI.lineStrong, style: StrokeStyle(dash: [6, 5]))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func agentRow(
+        id: String,
+        name: String,
+        subtitle: String,
+        isActive: Bool,
+        canEditAvatar: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 14) {
+            agentAvatar(id: id, isActive: isActive)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(WAI.text)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(WAI.textMuted)
+                    .lineLimit(1)
+            }
+            Spacer()
+            if isActive {
+                Text("Активен")
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(WAI.accentBright)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(WAI.accentSoft))
+            }
+            if canEditAvatar, let agent = agents.profile(for: id) {
+                Button { editingAvatarFor = agent } label: {
+                    Image(systemName: "wand.and.stars")
+                        .frame(width: 34, height: 34)
+                        .background(RoundedRectangle(cornerRadius: 9).fill(WAI.surfaceInset))
+                }
+                .buttonStyle(.plain)
+                .help("Создать аватар")
+            }
+            Button(action: action) {
+                Label("Новый чат", systemImage: "bubble.left")
+                    .font(.system(size: 12.5, weight: .medium))
+                    .padding(.horizontal, 12)
+                    .frame(height: 34)
+                    .background(RoundedRectangle(cornerRadius: 9).fill(WAI.surfaceInset))
+                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(WAI.line))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 14).fill(WAI.control))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(isActive ? WAI.lineAccent : WAI.line)
+        )
+    }
+
+    @ViewBuilder private func agentAvatar(id: String, isActive: Bool) -> some View {
+        if let image = profiles.agentAvatar(for: id) {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 46, height: 46)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        } else {
+            Image(systemName: id == "general" ? "sparkles" : "person.crop.circle")
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(isActive ? WAI.accentBright : WAI.textDim)
+                .frame(width: 46, height: 46)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isActive ? WAI.accentSoft : WAI.surfaceInset)
+                )
+        }
+    }
+
+    private func activate(_ id: String) {
+        store.settings.models.activeSkillID = id
+        store.settings.save()
+        SkillStore.shared.setActive(id)
+        store.newChat()
+        onStartChat()
+    }
+
+    private func providerName(_ id: String) -> String {
+        store.settings.models.providers.first(where: { $0.id == id })?.displayName ?? id
+    }
+}
+
+struct CreateAgentSheet: View {
+    @ObservedObject var store: AgentStore
+    @ObservedObject private var skills = SkillStore.shared
+    var onCreated: (AgentProfile, Data?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var instructions = ""
+    @State private var providerID = ""
+    @State private var modelName = ""
+    @State private var selectedSkillIDs = Set<String>()
+    @State private var avatarData: Data?
+    @State private var showsAvatarEditor = false
+    @State private var error: String?
+
+    private var selectableSkills: [Skill] {
+        skills.availableSkills.filter { !$0.id.hasPrefix("agent-") && $0.id != "general" }
+    }
+
+    private var selectedProvider: AIProviderConfiguration? {
+        store.settings.models.providers.first(where: { $0.id == providerID })
+    }
+
+    private var canCreate: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !providerID.isEmpty
+            && !modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            sheetHeader
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    identitySection
+                    instructionsSection
+                    skillsSection
+                    modelSection
+                }
+                .padding(24)
+            }
+            footer
+        }
+        .frame(width: 650, height: 700)
+        .background(WAI.surfaceStrong)
+        .onAppear {
+            providerID = store.settings.models.activeProviderID
+            modelName = selectedProvider?.modelName ?? ""
+        }
+        .sheet(isPresented: $showsAvatarEditor) {
+            AvatarEditorView(
+                store: store,
+                title: "Создать аватар агента",
+                initialImage: avatarData.flatMap(NSImage.init(data:))
+            ) { data in
+                avatarData = data
+            }
+        }
+    }
+
+    private var sheetHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Создать агента")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(WAI.text)
+                Text("Настройте роль, навыки и модель.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(WAI.textMuted)
+            }
+            Spacer()
+            Button { dismiss() } label: {
+                Image(systemName: "xmark").foregroundStyle(WAI.textDim)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(20)
+        .overlay(Rectangle().fill(WAI.line).frame(height: 1), alignment: .bottom)
+    }
+
+    private var identitySection: some View {
+        HStack(alignment: .top, spacing: 18) {
+            Button { showsAvatarEditor = true } label: {
+                Group {
+                    if let avatarData, let image = NSImage(data: avatarData) {
+                        Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "wand.and.stars")
+                                .font(.system(size: 24))
+                            Text("Аватар")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(WAI.textMuted)
+                    }
+                }
+                .frame(width: 112, height: 112)
+                .background(RoundedRectangle(cornerRadius: 22).fill(WAI.surfaceInset))
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(WAI.lineStrong))
+            }
+            .buttonStyle(.plain)
+
+            field("Имя агента") {
+                TextField("Например: Исследователь рынка", text: $name)
+                    .textFieldStyle(.plain)
+                    .padding(11)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(WAI.control))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(WAI.lineStrong))
+            }
+        }
+    }
+
+    private var instructionsSection: some View {
+        field("Роль и инструкции") {
+            TextEditor(text: $instructions)
+                .font(.system(size: 13))
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: 125)
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 10).fill(WAI.control))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(WAI.lineStrong))
+        }
+    }
+
+    private var skillsSection: some View {
+        field("Навыки") {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
+                ForEach(selectableSkills) { skill in
+                    let selected = selectedSkillIDs.contains(skill.id)
+                    Button {
+                        if selected { selectedSkillIDs.remove(skill.id) }
+                        else { selectedSkillIDs.insert(skill.id) }
+                    } label: {
+                        HStack {
+                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                            Text(skill.title).lineLimit(1)
+                            Spacer()
+                        }
+                        .font(.system(size: 12))
+                        .foregroundStyle(selected ? WAI.accentBright : WAI.textDim)
+                        .padding(.horizontal, 10)
+                        .frame(height: 36)
+                        .background(RoundedRectangle(cornerRadius: 9).fill(
+                            selected ? WAI.accentSoft : WAI.surfaceInset
+                        ))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var modelSection: some View {
+        field("Модель по API") {
+            HStack(spacing: 10) {
+                Picker("Провайдер", selection: $providerID) {
+                    ForEach(store.settings.models.providers) { provider in
+                        Text(provider.displayName).tag(provider.id)
+                    }
+                }
+                .labelsHidden()
+                .onChange(of: providerID) { _, _ in
+                    modelName = selectedProvider?.modelName ?? ""
+                }
+
+                TextField("Название модели", text: $modelName)
+                    .textFieldStyle(.plain)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 9).fill(WAI.control))
+                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(WAI.lineStrong))
+            }
+            Text("Используется API-ключ, уже сохранённый для выбранного провайдера.")
+                .font(.system(size: 10.5))
+                .foregroundStyle(WAI.textMuted)
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            if let error {
+                Text(error).font(.system(size: 11)).foregroundStyle(WAI.danger)
+            }
+            Spacer()
+            Button("Отмена") { dismiss() }
+                .buttonStyle(.plain)
+                .foregroundStyle(WAI.textDim)
+            Button("Создать и начать") {
+                do {
+                    let profile = try AgentProfileStore.shared.create(
+                        name: name,
+                        instructions: instructions,
+                        providerID: providerID,
+                        modelName: modelName,
+                        skillIDs: Array(selectedSkillIDs)
+                    )
+                    onCreated(profile, avatarData)
+                } catch {
+                    self.error = error.localizedDescription
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(!canCreate)
+            .foregroundStyle(canCreate ? WAI.bg : WAI.textMuted)
+            .padding(.horizontal, 15)
+            .frame(height: 38)
+            .background(RoundedRectangle(cornerRadius: 10).fill(
+                canCreate ? WAI.accent : WAI.surfaceInset
+            ))
+        }
+        .padding(20)
+        .overlay(Rectangle().fill(WAI.line).frame(height: 1), alignment: .top)
+    }
+
+    private func field<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(WAI.textDim)
+            content()
+        }
+    }
+}
