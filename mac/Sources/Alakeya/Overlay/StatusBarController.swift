@@ -12,7 +12,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var widgetEverShown = false
 
-    var onPrimaryAction: (() -> Void)?
+    /// Toggles voice listening (start/stop). First item of the menu.
+    var onToggleVoice: (() -> Void)?
+    /// Returns whether voice is currently listening, for the menu title.
+    var isVoiceActive: (() -> Bool)?
     var onToggleWidget: (() -> Void)?
     var onOpenSettings: (() -> Void)?
 
@@ -20,41 +23,29 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         super.init()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = makeIcon()
-        statusItem.button?.toolTip = "Alakeya — нажмите, чтобы говорить"
+        statusItem.button?.toolTip = "Alakeya"
 
-        // No persistent menu — left-click fires action directly.
-        // Right-click / ctrl-click opens menu via event check.
-        // sendAction(on:) is REQUIRED for a status bar button to fire its
-        // action on click; without it the button only highlights.
-        if let button = statusItem.button {
-            button.target = self
-            button.action = #selector(handleClick(_:))
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        }
-    }
-
-    @objc private func handleClick(_ sender: NSStatusBarButton?) {
-        print("[BAR] handleClick fired, onPrimaryAction=\(onPrimaryAction != nil)")
-        let event = NSApp.currentEvent
-        let isRightClick = event?.type == .rightMouseUp
-            || (event?.modifierFlags.contains(.control) ?? false)
-
-        if isRightClick {
-            let menu = buildMenu()
-            menu.delegate = self
-            statusItem.menu = menu
-            statusItem.button?.performClick(nil)
-            statusItem.menu = nil
-        } else {
-            print("[BAR] calling onPrimaryAction")
-            onPrimaryAction?()
-        }
+        // A persistent menu is the only click handling that works reliably
+        // when running via `swift run` (no .app bundle). The first item is
+        // the voice toggle — one click on the icon, one click to start.
+        let menu = buildMenu()
+        menu.delegate = self
+        statusItem.menu = menu
     }
 
     // ── Menu ──────────────────────────────────────────────
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
+
+        let voiceItem = NSMenuItem(
+            title: "🎤 Слушать",
+            action: #selector(handleVoiceToggle),
+            keyEquivalent: "")
+        voiceItem.target = self
+        menu.addItem(voiceItem)
+
+        menu.addItem(.separator())
 
         let widgetItem = NSMenuItem(
             title: widgetEverShown ? "Показать виджет" : "Добавить виджет",
@@ -80,8 +71,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     nonisolated func menuWillOpen(_ menu: NSMenu) {
         Task { @MainActor in
-            menu.items.first?.title = self.widgetEverShown ? "Показать виджет" : "Добавить виджет"
+            let listening = self.isVoiceActive?() ?? false
+            menu.items.first?.title = listening ? "⏹ Остановить" : "🎤 Слушать"
+            if menu.items.count > 2 {
+                menu.items[2].title = self.widgetEverShown ? "Показать виджет" : "Добавить виджет"
+            }
         }
+    }
+
+    @objc private func handleVoiceToggle() {
+        widgetEverShown = true
+        onToggleVoice?()
     }
 
     @objc private func handleWidgetItem() {

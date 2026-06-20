@@ -50,21 +50,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.orbController.toggle()
         }
 
-        // Single left-click on the menu bar icon toggles voice listening,
-        // mirroring the mic button in the chat panel.
-        statusBar.onPrimaryAction = { [weak self] in
+        // "Слушать / Остановить" menu item toggles voice — same as the mic
+        // button — and shows the orb so its listening animation is visible.
+        statusBar.onToggleVoice = { [weak self] in
             guard let self else { return }
             if self.voice.isListening {
                 self.voice.stop()
             } else {
-                // The mic button works because the app is frontmost when it is
-                // pressed. A status-bar click leaves the app inactive, which
-                // blocks the audio engine / speech permission. Activate first so
-                // voice.start() runs in the same context as the mic button.
-                NSApp.activate(ignoringOtherApps: true)
                 self.orbController.show()
                 self.voice.start()
             }
+        }
+        statusBar.isVoiceActive = { [weak self] in
+            self?.voice.isListening ?? false
         }
 
         // "Показать виджет" menu item just reveals the orb.
