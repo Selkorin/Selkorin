@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 // ============================================================
 // FloatingOrbView — content of the transparent orb window.
@@ -9,9 +10,26 @@ import AppKit
 @MainActor
 final class FloatingOrbModel: ObservableObject {
     @Published var size: CGFloat
+    @Published var cloudVisible = false
+    private var hideWorkItem: DispatchWorkItem?
 
     init(size: CGFloat) {
         self.size = size
+    }
+
+    func handleStatus(_ status: AgentStatusLabel) {
+        let hasText = status != .ready
+        if hasText {
+            cloudVisible = true
+            hideWorkItem?.cancel()
+            let item = DispatchWorkItem { [weak self] in self?.cloudVisible = false }
+            hideWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: item)
+        } else {
+            hideWorkItem?.cancel()
+            hideWorkItem = nil
+            cloudVisible = false
+        }
     }
 }
 
@@ -126,13 +144,11 @@ struct FloatingOrbView: View {
     var onResize: ((CGFloat, Bool) -> Void)?
     var onMove: ((NSPoint, Bool) -> Void)?
 
-    @State private var cloudTimedOut = false
-
     var body: some View {
         HStack(spacing: 10) {
             orbArea
 
-            if let text = stateText, !cloudTimedOut {
+            if model.cloudVisible, let text = stateText {
                 stateCloud(text)
                     .transition(
                         .opacity.combined(
@@ -143,8 +159,7 @@ struct FloatingOrbView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .animation(WAI.easeOut, value: store.status)
-        .animation(WAI.easeOut, value: cloudTimedOut)
+        .animation(WAI.easeOut, value: model.cloudVisible)
         .overlay(
             WidgetInteractionLayer(
                 currentSize: model.size,
@@ -153,15 +168,8 @@ struct FloatingOrbView: View {
                 onMove: onMove
             )
         )
-        .task(id: store.status) {
-            guard stateText != nil else {
-                cloudTimedOut = false
-                return
-            }
-            cloudTimedOut = false
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            cloudTimedOut = true
-        }
+        .onAppear { model.handleStatus(store.status) }
+        .onReceive(store.$status) { model.handleStatus($0) }
     }
 
     // ── Orb + aura ────────────────────────────────────────
