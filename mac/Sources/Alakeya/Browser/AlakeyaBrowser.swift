@@ -1031,6 +1031,12 @@ private struct BrowserWebView: NSViewRepresentable {
 
 struct BrowserPaneView: View {
     @ObservedObject var store: BrowserStore
+    var isFullFrame: Bool = false
+    var assistantPanelVisible: Bool = false
+    var onEnterFullFrame: () -> Void = {}
+    var onExitFullFrame: () -> Void = {}
+    var onToggleAssistantPanel: () -> Void = {}
+    var onCloseBrowser: () -> Void = {}
     @State private var screenshotCopied = false
     @State private var showAnnotation = false
     @State private var screenshotToast = ""
@@ -1227,6 +1233,33 @@ struct BrowserPaneView: View {
             .background(WAI.surfaceInset)
             .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(WAI.line))
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            // Mode-specific toolbar buttons
+            if isFullFrame {
+                // AI panel toggle
+                toolBtn("sparkles", accent: assistantPanelVisible) {
+                    onToggleAssistantPanel()
+                }
+                .help(assistantPanelVisible ? "Скрыть AI-панель" : "Открыть AI-панель")
+
+                // Return to chat
+                toolBtn("arrow.down.right.and.arrow.up.left") {
+                    onExitFullFrame()
+                }
+                .help("Вернуть чат")
+            } else {
+                // Expand to full frame
+                toolBtn("arrow.up.left.and.arrow.down.right") {
+                    onEnterFullFrame()
+                }
+                .help("Развернуть браузер")
+            }
+
+            // Close browser — always visible
+            toolBtn("xmark.circle") {
+                onCloseBrowser()
+            }
+            .help("Закрыть браузер")
 
             // Overflow menu
             browserMenu

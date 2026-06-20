@@ -5,9 +5,8 @@ import AppKit
 // ChatView.swift — main chat window content.
 //
 // Structure:
-//   Top bar:   [● ● ●]  Alakeya  |  Настройки
-//   Middle:    messages
-//   Input bar: text field | mic | send
+//   Normal mode:    [AgentSidebar] [Chat] [Browser 560px optional]
+//   Full browser:   [BrowserPaneView full frame] [BrowserAssistantPanel optional]
 // ============================================================
 
 struct ChatView: View {
@@ -44,178 +43,25 @@ struct ChatView: View {
     // Traffic lights hover
     @State private var hoveringLights = false
 
-    // ── Browser split layout ──────────────────────────────
-    // Constraints (px)
-    private let kMinBrowserWidth:     CGFloat = 360
-    // This is the whole chat side, including the 240 pt agent sidebar.
-    // Reserving only the conversation width used to collapse messages to a
-    // narrow strip whenever an old, oversized browser width was restored.
-    private let kMinChatPanelWidth:   CGFloat = 640
-    private let kIdealChatPanelWidth: CGFloat = 760
-    private let kDefaultBrowserWidth: CGFloat = 680
-    private let kDividerHitWidth:     CGFloat = 20    // comfortable hit area
-
-    // Persisted sidebar width (UserDefaults)
-    @AppStorage("browserSidebarWidth") private var savedBrowserWidth: Double = 600
-
-    // Live width used during the session — initialized from savedBrowserWidth on appear
-    @State private var browserWidth: CGFloat = 600
-
-    // Drag + hover state
-    @State private var isDraggingDivider  = false
-    @State private var dividerDragStart:   CGFloat = 0
-    @State private var isDividerHovered   = false
+    // ── Browser state machine ─────────────────────────────
+    @State private var browserFullFrameMode = false
+    @State private var browserAssistantPanelVisible = false
+    @State private var browserAssistantInput = ""
+    @State private var browserAssistantIsThinking = false
+    @State private var browserAssistantMessages: [BrowserAssistantMessage] = []
 
     private var isListening: Bool { store.status == .listening }
-    // One source of truth: the header button always controls the rail.
-    // Individual workspaces handle narrow widths internally.
     private var showsExpandedNavigation: Bool { navigationExpanded }
 
     // ── Root ─────────────────────────────────────────────
 
     var body: some View {
         ZStack {
-            // ── TopBar (full width) + content row ─────────
             VStack(spacing: 0) {
                 topBar
                     .zIndex(1)
-                GeometryReader { geo in
-                    let reservedChatWidth = min(
-                        kIdealChatPanelWidth,
-                        max(kMinChatPanelWidth, geo.size.width * 0.46)
-                    )
-                    let maxBW = max(
-                        kMinBrowserWidth,
-                        geo.size.width - reservedChatWidth - kDividerHitWidth
-                    )
-                    let effectiveBW = max(kMinBrowserWidth, min(maxBW, browserWidth))
-                    let chatPanelW = geo.size.width - (browser.isPresented ? effectiveBW + kDividerHitWidth : 0)
-
-                    HStack(spacing: 0) {
-                        // ── Chat area — always fills remaining space ───────
-                        HStack(spacing: 0) {
-                            if navigationExpanded && !store.showSettings {
-                                AgentSidebarView(
-                                    store: store,
-                                    agentsOpen: $agentsOpen,
-                                    sidebarOpen: $sidebarOpen,
-                                    showsExpandedNavigation: showsExpandedNavigation,
-                                    onStartChat: {}
-                                )
-                                .transition(.move(edge: .leading).combined(with: .opacity))
-                            }
-                            if sidebarOpen {
-                                SidebarView(store: store, isOpen: $sidebarOpen)
-                                    .transition(.opacity)
-                            }
-                            VStack(spacing: 0) {
-                                if store.showSettings {
-                                    SettingsView(
-                                        store: store,
-                                        updateManager: updateManager,
-                                        onClose: { store.showSettings = false },
-                                        tab: $settingsTab
-                                    )
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                } else if agentsOpen {
-                                    AgentWorkspaceView(store: store) {
-                                        agentsOpen = false
-                                    }
-                                } else {
-                                    middleArea(chatW: chatPanelW)
-                                    inputBar(chatW: chatPanelW)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                        // ── Resizable browser panel — always in hierarchy ──
-                        // WKWebView never removed → page state survives show/hide/resize.
-                        HStack(spacing: 0) {
-                            // Draggable divider: 20px hit area with visible grip handle.
-                            ZStack {
-                                // Background line
-                                Rectangle()
-                                    .fill((isDraggingDivider || isDividerHovered)
-                                          ? WAI.accent.opacity(0.5)
-                                          : Color.white.opacity(0.1))
-                                    .frame(width: isDraggingDivider ? 2 : 1)
-
-                                // Grip dots — visible on hover/drag
-                                if isDividerHovered || isDraggingDivider {
-                                    VStack(spacing: 4) {
-                                        ForEach(0..<5, id: \.self) { _ in
-                                            Circle()
-                                                .fill(WAI.accent)
-                                                .frame(width: 3, height: 3)
-                                        }
-                                    }
-                                    .transition(.opacity)
-                                }
-                            }
-                            .frame(width: kDividerHitWidth)
-                            .contentShape(Rectangle())
-                            .animation(.easeOut(duration: 0.15), value: isDividerHovered)
-                            .animation(.easeOut(duration: 0.15), value: isDraggingDivider)
-                            .onHover { inside in
-                                isDividerHovered = inside
-                                if inside { NSCursor.resizeLeftRight.push() }
-                                else      { NSCursor.pop() }
-                            }
-                            .onTapGesture(count: 2) {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    browserWidth = min(kDefaultBrowserWidth, maxBW)
-                                }
-                                savedBrowserWidth = Double(browserWidth)
-                            }
-                            .gesture(
-                                DragGesture(minimumDistance: 1, coordinateSpace: .global)
-                                    .onChanged { value in
-                                        if !isDraggingDivider {
-                                            isDraggingDivider = true
-                                            dividerDragStart  = browserWidth
-                                        }
-                                        let newW = dividerDragStart - value.translation.width
-                                        browserWidth = max(kMinBrowserWidth, min(maxBW, newW))
-                                    }
-                                    .onEnded { _ in
-                                        isDraggingDivider = false
-                                        savedBrowserWidth = Double(browserWidth)
-                                    }
-                            )
-
-                            BrowserPaneView(store: browser.store)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }
-                        .frame(
-                            width: browser.isPresented ? effectiveBW + kDividerHitWidth : 0,
-                            alignment: .leading
-                        )
-                        .clipped()
-                    }
-                    .onChange(of: geo.size) { _, newSize in
-                        let reserved = min(
-                            kIdealChatPanelWidth,
-                            max(kMinChatPanelWidth, newSize.width * 0.46)
-                        )
-                        let clampedMax = max(
-                            kMinBrowserWidth,
-                            newSize.width - reserved - kDividerHitWidth
-                        )
-                        if browserWidth > clampedMax {
-                            browserWidth = clampedMax
-                            savedBrowserWidth = Double(clampedMax)
-                        }
-                        #if DEBUG
-                        let mBW = clampedMax
-                        let eBW = max(kMinBrowserWidth, min(mBW, browserWidth))
-                        let cW  = newSize.width - (browser.isPresented ? eBW + kDividerHitWidth : 0)
-                        print("[Layout] avail=\(Int(newSize.width))×\(Int(newSize.height)) chatW=\(Int(cW)) browserW=\(Int(eBW)) maxBW=\(Int(mBW)) browser=\(browser.isPresented)")
-                        #endif
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                mainLayoutArea
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -245,14 +91,15 @@ struct ChatView: View {
         )
         .onAppear {
             focused = true
-            let restored = CGFloat(savedBrowserWidth)
-            browserWidth = restored.isFinite && restored >= kMinBrowserWidth
-                ? restored
-                : kDefaultBrowserWidth
             agentProfiles.reload()
         }
         .onChange(of: browser.isPresented) { _, isPresented in
             onBrowserToggle(isPresented)
+            // If browser closes while in full frame mode, exit it
+            if !isPresented {
+                browserFullFrameMode = false
+                browserAssistantPanelVisible = false
+            }
         }
         .onExitCommand {
             if isVoiceCompanionVisible {
@@ -274,6 +121,193 @@ struct ChatView: View {
             ProfileSettingsSheet(store: store, onClose: { showsProfilePanel = false })
         }
     }
+
+    // ── Main layout state machine ─────────────────────────
+
+    @ViewBuilder
+    private var mainLayoutArea: some View {
+        if browser.isPresented && browserFullFrameMode {
+            browserFullFrameLayout
+        } else {
+            normalWorkspaceLayout
+        }
+    }
+
+    // ── NORMAL MODE: chat + optional fixed-width browser ──
+
+    @ViewBuilder
+    private var normalWorkspaceLayout: some View {
+        HStack(spacing: 0) {
+            chatAreaLayout
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if browser.isPresented {
+                BrowserPaneView(
+                    store: browser.store,
+                    isFullFrame: false,
+                    assistantPanelVisible: false,
+                    onEnterFullFrame: { enterBrowserFullFrame(openAssistant: false) },
+                    onExitFullFrame: { exitBrowserFullFrame() },
+                    onToggleAssistantPanel: { toggleBrowserAssistantPanel() },
+                    onCloseBrowser: { closeBrowser() }
+                )
+                .frame(width: 560)
+                .frame(maxHeight: .infinity)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // ── FULL BROWSER MODE ─────────────────────────────────
+
+    private var browserFullFrameLayout: some View {
+        HStack(spacing: 0) {
+            BrowserPaneView(
+                store: browser.store,
+                isFullFrame: true,
+                assistantPanelVisible: browserAssistantPanelVisible,
+                onEnterFullFrame: { enterBrowserFullFrame(openAssistant: false) },
+                onExitFullFrame: { exitBrowserFullFrame() },
+                onToggleAssistantPanel: { toggleBrowserAssistantPanel() },
+                onCloseBrowser: { closeBrowser() }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .bottomTrailing) {
+                if !browserAssistantPanelVisible {
+                    browserOrbButton
+                        .padding(.trailing, 24)
+                        .padding(.bottom, 24)
+                }
+            }
+            if browserAssistantPanelVisible {
+                BrowserAssistantPanel(
+                    messages: browserAssistantMessages,
+                    input: $browserAssistantInput,
+                    isThinking: browserAssistantIsThinking,
+                    onSend: { sendBrowserAssistantMessage($0) },
+                    onClose: { toggleBrowserAssistantPanel() },
+                    onExitFullFrame: { exitBrowserFullFrame() }
+                )
+                .frame(width: 390)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // ── Chat area: sidebar + messages + input ─────────────
+
+    @ViewBuilder
+    private var chatAreaLayout: some View {
+        GeometryReader { geo in
+            HStack(spacing: 0) {
+                if navigationExpanded && !store.showSettings {
+                    AgentSidebarView(
+                        store: store,
+                        agentsOpen: $agentsOpen,
+                        sidebarOpen: $sidebarOpen,
+                        showsExpandedNavigation: showsExpandedNavigation,
+                        onStartChat: {}
+                    )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+                if sidebarOpen {
+                    SidebarView(store: store, isOpen: $sidebarOpen)
+                        .transition(.opacity)
+                }
+                VStack(spacing: 0) {
+                    if store.showSettings {
+                        SettingsView(
+                            store: store,
+                            updateManager: updateManager,
+                            onClose: { store.showSettings = false },
+                            tab: $settingsTab
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if agentsOpen {
+                        AgentWorkspaceView(store: store) {
+                            agentsOpen = false
+                        }
+                    } else {
+                        middleArea(chatW: geo.size.width)
+                        inputBar(chatW: geo.size.width)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // ── Browser state machine helpers ─────────────────────
+
+    private func enterBrowserFullFrame(openAssistant: Bool = false) {
+        guard browser.isPresented else { return }
+        withAnimation(.easeInOut(duration: 0.22)) {
+            browserFullFrameMode = true
+            browserAssistantPanelVisible = openAssistant
+        }
+    }
+
+    private func exitBrowserFullFrame() {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            browserFullFrameMode = false
+            browserAssistantPanelVisible = false
+        }
+    }
+
+    private func toggleBrowserAssistantPanel() {
+        guard browserFullFrameMode else { return }
+        withAnimation(.easeInOut(duration: 0.18)) {
+            browserAssistantPanelVisible.toggle()
+        }
+    }
+
+    private func closeBrowser() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            browserFullFrameMode = false
+            browserAssistantPanelVisible = false
+            browser.close()
+        }
+    }
+
+    // ── AI panel send ─────────────────────────────────────
+
+    private func sendBrowserAssistantMessage(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        browserAssistantMessages.append(BrowserAssistantMessage(role: .user, text: trimmed))
+        browserAssistantInput = ""
+        browserAssistantIsThinking = true
+        // TODO: connect to real agent pipeline
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            browserAssistantMessages.append(BrowserAssistantMessage(
+                role: .assistant,
+                text: "Команда получена: \(trimmed). TODO: подключить к основному pipeline агента."
+            ))
+            browserAssistantIsThinking = false
+        }
+    }
+
+    // ── Orb button (full browser mode only) ──────────────
+
+    private var browserOrbButton: some View {
+        Button {
+            guard browserFullFrameMode else { return }
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                browserAssistantPanelVisible = true
+            }
+        } label: {
+            Image(systemName: "face.smiling")
+                .font(.system(size: 24, weight: .semibold))
+                .frame(width: 56, height: 56)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.blue.opacity(0.8), lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .help("Открыть AI-панель")
+    }
+
     // ── Background ────────────────────────────────────────
 
     private var windowBackground: some View {
@@ -337,7 +371,7 @@ struct ChatView: View {
             // Browser toggle
             Button {
                 if browser.isPresented {
-                    AlakeyaBrowser.shared.close()
+                    closeBrowser()
                 } else {
                     AlakeyaBrowser.shared.open()
                 }
