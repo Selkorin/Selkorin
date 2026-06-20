@@ -50,15 +50,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.orbController.toggle()
         }
 
-        statusBar.onToggleWidget = { [weak self] in
+        // Single left-click on the menu bar icon toggles voice listening,
+        // mirroring the mic button in the chat panel.
+        statusBar.onPrimaryAction = { [weak self] in
             guard let self else { return }
             if self.store.status == .listening {
                 self.voice.stop()
-                self.orbController.hide()
             } else {
                 self.orbController.show()
                 self.voice.start()
             }
+        }
+
+        // "Показать виджет" menu item just reveals the orb.
+        statusBar.onToggleWidget = { [weak self] in
+            self?.orbController.show()
         }
 
         statusBar.onOpenSettings = { [weak self] in

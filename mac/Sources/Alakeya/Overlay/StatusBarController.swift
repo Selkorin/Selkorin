@@ -10,8 +10,12 @@ import SwiftUI
 final class StatusBarController: NSObject, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
+    private var contextMenu: NSMenu!
     private var widgetEverShown = false
 
+    /// Primary action — single left-click on the icon. Toggles voice + orb,
+    /// exactly like pressing the mic button in the chat panel.
+    var onPrimaryAction: (() -> Void)?
     var onToggleWidget: (() -> Void)?
     var onOpenSettings: (() -> Void)?
 
@@ -19,10 +23,35 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         super.init()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = makeIcon()
-        statusItem.button?.toolTip = "Alakeya"
-        let menu = buildMenu()
-        menu.delegate = self
-        statusItem.menu = menu
+        statusItem.button?.toolTip = "Alakeya — нажмите, чтобы говорить"
+
+        // Build the menu but DO NOT attach it to the status item, otherwise
+        // a left-click opens the menu instead of firing our action.
+        contextMenu = buildMenu()
+        contextMenu.delegate = self
+
+        // Direct click handling: left-click → primary action, right-click → menu.
+        if let button = statusItem.button {
+            button.target = self
+            button.action = #selector(handleClick)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
+    }
+
+    @objc private func handleClick() {
+        guard let event = NSApp.currentEvent else {
+            onPrimaryAction?()
+            return
+        }
+        let isRightClick = event.type == .rightMouseUp
+            || event.modifierFlags.contains(.control)
+        if isRightClick {
+            statusItem.menu = contextMenu
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil   // detach again so left-click keeps firing the action
+        } else {
+            onPrimaryAction?()
+        }
     }
 
     // ── Menu ──────────────────────────────────────────────
