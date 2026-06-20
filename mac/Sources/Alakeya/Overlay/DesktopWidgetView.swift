@@ -159,21 +159,12 @@ struct FloatingOrbView: View {
     }
 
     private var orbArea: some View {
-        Group {
-            if let url = Bundle.module.url(forResource: "pers_1", withExtension: "png"),
-               let image = NSImage(contentsOf: url) {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } else {
-                OrbView(
-                    state: store.assistantState,
-                    emotion: store.orbEmotion,
-                    size: visualOrbSize,
-                    onTap: nil
-                )
-            }
-        }
+        OrbView(
+            state: store.assistantState,
+            emotion: store.orbEmotion,
+            size: visualOrbSize,
+            onTap: nil
+        )
         .frame(width: visualOrbSize, height: visualOrbSize)
         .allowsHitTesting(false)
     }
