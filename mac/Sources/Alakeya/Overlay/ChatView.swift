@@ -9,6 +9,49 @@ import AppKit
 //   Full browser:   [BrowserPaneView full frame] [BrowserAssistantPanel optional]
 // ============================================================
 
+private struct AlakeyaOrbIcon: View {
+    var size: CGFloat = 56
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(red: 0.333, green: 0.839, blue: 1.0),
+                            Color(red: 0.0, green: 0.518, blue: 0.706),
+                            Color(red: 0.0, green: 0.302, blue: 0.471)
+                        ],
+                        center: .topLeading,
+                        startRadius: 4,
+                        endRadius: size
+                    )
+                )
+                .frame(width: size, height: size)
+                .shadow(color: Color(red: 0.0, green: 0.518, blue: 0.706).opacity(0.35), radius: 16, y: 6)
+            VStack(spacing: 4) {
+                HStack(spacing: size * 0.16) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.95))
+                        .frame(width: size * 0.11, height: size * 0.22)
+                    Capsule()
+                        .fill(Color.white.opacity(0.95))
+                        .frame(width: size * 0.11, height: size * 0.22)
+                }
+                Capsule()
+                    .stroke(Color.white.opacity(0.95), lineWidth: 3)
+                    .frame(width: size * 0.42, height: size * 0.20)
+                    .mask(
+                        Rectangle()
+                            .frame(height: size * 0.13)
+                            .offset(y: size * 0.05)
+                    )
+            }
+            .offset(y: size * 0.03)
+        }
+        .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+    }
+}
+
 struct ChatView: View {
 
     @ObservedObject var store: AgentStore
@@ -150,7 +193,7 @@ struct ChatView: View {
                     onToggleAssistantPanel: { toggleBrowserAssistantPanel() },
                     onCloseBrowser: { closeBrowser() }
                 )
-                .frame(width: 560)
+                .frame(width: 390)
                 .frame(maxHeight: .infinity)
             }
         }
@@ -160,38 +203,41 @@ struct ChatView: View {
     // ── FULL BROWSER MODE ─────────────────────────────────
 
     private var browserFullFrameLayout: some View {
-        HStack(spacing: 0) {
-            BrowserPaneView(
-                store: browser.store,
-                isFullFrame: true,
-                assistantPanelVisible: browserAssistantPanelVisible,
-                onEnterFullFrame: { enterBrowserFullFrame(openAssistant: false) },
-                onExitFullFrame: { exitBrowserFullFrame() },
-                onToggleAssistantPanel: { toggleBrowserAssistantPanel() },
-                onCloseBrowser: { closeBrowser() }
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(alignment: .bottomTrailing) {
-                if !browserAssistantPanelVisible {
-                    browserOrbButton
-                        .padding(.trailing, 24)
-                        .padding(.bottom, 24)
+        GeometryReader { geo in
+            let panelWidth = min(CGFloat(390), max(CGFloat(320), geo.size.width * 0.34))
+            HStack(spacing: 0) {
+                BrowserPaneView(
+                    store: browser.store,
+                    isFullFrame: true,
+                    assistantPanelVisible: browserAssistantPanelVisible,
+                    onEnterFullFrame: { enterBrowserFullFrame(openAssistant: false) },
+                    onExitFullFrame: { exitBrowserFullFrame() },
+                    onToggleAssistantPanel: { toggleBrowserAssistantPanel() },
+                    onCloseBrowser: { closeBrowser() }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .bottomTrailing) {
+                    if !browserAssistantPanelVisible {
+                        browserOrbButton
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 24)
+                    }
+                }
+                if browserAssistantPanelVisible {
+                    BrowserAssistantPanel(
+                        messages: browserAssistantMessages,
+                        input: $browserAssistantInput,
+                        isThinking: browserAssistantIsThinking,
+                        onSend: { sendBrowserAssistantMessage($0) },
+                        onClose: { toggleBrowserAssistantPanel() },
+                        onExitFullFrame: { exitBrowserFullFrame() }
+                    )
+                    .frame(width: panelWidth)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
-            if browserAssistantPanelVisible {
-                BrowserAssistantPanel(
-                    messages: browserAssistantMessages,
-                    input: $browserAssistantInput,
-                    isThinking: browserAssistantIsThinking,
-                    onSend: { sendBrowserAssistantMessage($0) },
-                    onClose: { toggleBrowserAssistantPanel() },
-                    onExitFullFrame: { exitBrowserFullFrame() }
-                )
-                .frame(width: 390)
-                .transition(.move(edge: .trailing).combined(with: .opacity))
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // ── Chat area: sidebar + messages + input ─────────────
@@ -297,12 +343,7 @@ struct ChatView: View {
                 browserAssistantPanelVisible = true
             }
         } label: {
-            Image(systemName: "face.smiling")
-                .font(.system(size: 24, weight: .semibold))
-                .frame(width: 56, height: 56)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.blue.opacity(0.8), lineWidth: 2))
+            AlakeyaOrbIcon(size: 56)
         }
         .buttonStyle(.plain)
         .help("Открыть AI-панель")

@@ -21,16 +21,15 @@ final class BrowserStore: NSObject, ObservableObject, WKNavigationDelegate, WKUI
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
-        // Desktop content mode: sites render full desktop layout, not mobile
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
-        configuration.defaultWebpagePreferences.preferredContentMode = .desktop
+        configuration.defaultWebpagePreferences.preferredContentMode = .mobile
         webView = WKWebView(frame: .zero, configuration: configuration)
         super.init()
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsMagnification = true
-        // Desktop Safari UA — prevents sites from serving mobile/legacy fallback pages
-        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
+        // Mobile Safari UA — renders mobile layout to match 390px browser width
+        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
         // Dark appearance via native WebKit — signals prefers-color-scheme: dark
         // without overriding sites' own dark mode implementations
         webView.appearance = NSAppearance(named: .darkAqua)
@@ -1029,6 +1028,64 @@ private struct BrowserWebView: NSViewRepresentable {
     func updateNSView(_ nsView: WKWebView, context: Context) {}
 }
 
+// ── Browser Tab model ─────────────────────────────────────────
+
+@MainActor
+final class BrowserTab: Identifiable, ObservableObject {
+    let id = UUID()
+    let store = BrowserStore()
+}
+
+// ── Browser Tab Item view ─────────────────────────────────────
+
+struct BrowserTabItem: View {
+    @ObservedObject var tab: BrowserTab
+    var isActive: Bool
+    var onSelect: () -> Void
+    var onClose: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "globe")
+                .font(.system(size: 10))
+                .foregroundStyle(isActive ? WAI.accentBright : WAI.textFaint)
+                .frame(width: 14)
+            Text(tab.store.title.isEmpty ? "Новая вкладка" : tab.store.title)
+                .font(.system(size: 11))
+                .foregroundStyle(isActive ? WAI.text : WAI.textDim)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(WAI.textFaint)
+                    .frame(width: 16, height: 16)
+                    .background(isHovered ? WAI.surfaceInset : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .opacity(isActive || isHovered ? 1 : 0)
+        }
+        .padding(.horizontal, 8)
+        .frame(width: 140, height: 28)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isActive ? Color(hex: 0x1A1930) : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(isActive ? WAI.lineAccent : Color.clear, lineWidth: 1)
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture { onSelect() }
+        .onHover { isHovered = $0 }
+    }
+}
+
+// ── Browser Pane View ─────────────────────────────────────────
+
 struct BrowserPaneView: View {
     @ObservedObject var store: BrowserStore
     var isFullFrame: Bool = false
@@ -1037,19 +1094,154 @@ struct BrowserPaneView: View {
     var onExitFullFrame: () -> Void = {}
     var onToggleAssistantPanel: () -> Void = {}
     var onCloseBrowser: () -> Void = {}
+
+    // Tab state
+    @State private var tabs: [BrowserTab] = []
+    @State private var activeTabID: UUID? = nil
+    @State private var browserToastText: String? = nil
+    @State private var browserToastTask: Task<Void, Never>? = nil
+
+    private var activeTab: BrowserTab? {
+        tabs.first(where: { $0.id == activeTabID })
+    }
+
+    private var activeStore: BrowserStore {
+        activeTab?.store ?? store
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            browserTabStrip
+            // Use a child view that observes the active store so toolbar re-renders on navigation
+            if let tab = activeTab {
+                BrowserPaneContent(
+                    activeStore: tab.store,
+                    isFullFrame: isFullFrame,
+                    assistantPanelVisible: assistantPanelVisible,
+                    onEnterFullFrame: onEnterFullFrame,
+                    onExitFullFrame: onExitFullFrame,
+                    onToggleAssistantPanel: onToggleAssistantPanel,
+                    onCloseBrowser: onCloseBrowser
+                )
+            } else {
+                BrowserPaneContent(
+                    activeStore: store,
+                    isFullFrame: isFullFrame,
+                    assistantPanelVisible: assistantPanelVisible,
+                    onEnterFullFrame: onEnterFullFrame,
+                    onExitFullFrame: onExitFullFrame,
+                    onToggleAssistantPanel: onToggleAssistantPanel,
+                    onCloseBrowser: onCloseBrowser
+                )
+            }
+        }
+        .overlay(alignment: .center) {
+            if let text = browserToastText {
+                Text(text)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.white.opacity(0.14), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
+                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
+        }
+        .background(Color(hex: 0x07070D))
+        .onAppear {
+            if tabs.isEmpty {
+                let tab = BrowserTab()
+                tabs.append(tab)
+                activeTabID = tab.id
+                tab.store.navigate(store.address)
+            }
+        }
+    }
+
+    // ── Tab strip ────────────────────────────────────────────────
+
+    private var browserTabStrip: some View {
+        HStack(spacing: 2) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 2) {
+                    ForEach(tabs) { tab in
+                        BrowserTabItem(
+                            tab: tab,
+                            isActive: tab.id == activeTabID,
+                            onSelect: { activeTabID = tab.id },
+                            onClose: { closeTab(tab.id) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
+
+            Button(action: addTab) {
+                Image(systemName: "plus")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(WAI.textDim)
+                    .frame(width: 28, height: 28)
+                    .background(WAI.surfaceInset)
+                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(WAI.line))
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 8)
+            .help("Новая вкладка")
+        }
+        .frame(height: 36)
+        .background(Color(hex: 0x0C0B18))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(WAI.line).frame(height: 1)
+        }
+    }
+
+    private func addTab() {
+        let tab = BrowserTab()
+        tabs.append(tab)
+        activeTabID = tab.id
+        tab.store.navigate("https://www.google.com")
+    }
+
+    private func closeTab(_ id: UUID) {
+        guard let idx = tabs.firstIndex(where: { $0.id == id }) else { return }
+        tabs.remove(at: idx)
+        if tabs.isEmpty {
+            addTab()
+        } else if activeTabID == id {
+            let newIdx = min(idx, tabs.count - 1)
+            activeTabID = tabs[newIdx].id
+        }
+    }
+}
+
+// ── Browser Pane Content (observes active store) ──────────────
+
+private struct BrowserPaneContent: View {
+    @ObservedObject var activeStore: BrowserStore
+    var isFullFrame: Bool
+    var assistantPanelVisible: Bool
+    var onEnterFullFrame: () -> Void
+    var onExitFullFrame: () -> Void
+    var onToggleAssistantPanel: () -> Void
+    var onCloseBrowser: () -> Void
     @State private var screenshotCopied = false
     @State private var showAnnotation = false
     @State private var screenshotToast = ""
+    @State private var browserToastText: String? = nil
+    @State private var browserToastTask: Task<Void, Never>? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             toolbar
-            if store.isShowingFind {
+            if activeStore.isShowingFind {
                 findBar
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
             ZStack(alignment: .bottomTrailing) {
-                BrowserWebView(webView: store.webView)
+                BrowserWebView(webView: activeStore.webView)
                 if !screenshotToast.isEmpty {
                     Text(screenshotToast)
                         .font(.system(size: 11, weight: .medium))
@@ -1061,17 +1253,30 @@ struct BrowserPaneView: View {
                         .padding(.bottom, 84)
                         .padding(.trailing, 12)
                 }
-                if store.lastScreenshot != nil {
+                if activeStore.lastScreenshot != nil {
                     screenshotPreviewCard
                         .padding(12)
                 }
             }
         }
-        .animation(.easeInOut(duration: 0.18), value: store.isShowingFind)
-        .background(Color(hex: 0x07070D))
+        .overlay(alignment: .center) {
+            if let text = browserToastText {
+                Text(text)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.white.opacity(0.14), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
+                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: activeStore.isShowingFind)
         .sheet(isPresented: $showAnnotation) {
-            if let img = store.lastScreenshot ?? store.lastAnnotatedScreenshot {
-                BrowserAnnotationView(screenshot: img, store: store) {
+            if let img = activeStore.lastScreenshot ?? activeStore.lastAnnotatedScreenshot {
+                BrowserAnnotationView(screenshot: img, store: activeStore) {
                     showAnnotation = false
                 }
             }
@@ -1081,7 +1286,7 @@ struct BrowserPaneView: View {
     // ── Screenshot preview card ──────────────────────────────────
 
     private var screenshotPreviewCard: some View {
-        let thumb = store.lastAnnotatedScreenshot ?? store.lastScreenshot
+        let thumb = activeStore.lastAnnotatedScreenshot ?? activeStore.lastScreenshot
         return VStack(spacing: 0) {
             if let img = thumb {
                 ZStack(alignment: .topTrailing) {
@@ -1121,7 +1326,7 @@ struct BrowserPaneView: View {
     }
 
     private func copyLastScreenshotToClipboard() {
-        let img = store.lastAnnotatedScreenshot ?? store.lastScreenshot
+        let img = activeStore.lastAnnotatedScreenshot ?? activeStore.lastScreenshot
         guard let image = img else { return }
         screenshotCopied = BrowserClipboard.copy(image)
         Task {
@@ -1130,19 +1335,58 @@ struct BrowserPaneView: View {
         }
     }
 
+    // ── Screenshot to clipboard + toast ──────────────────────────
+
+    private func captureBrowserScreenshotToClipboard() {
+        let config = WKSnapshotConfiguration()
+        activeStore.webView.takeSnapshot(with: config) { image, _ in
+            DispatchQueue.main.async {
+                if let image {
+                    let pb = NSPasteboard.general
+                    pb.clearContents()
+                    pb.writeObjects([image])
+                    if let tiff = image.tiffRepresentation,
+                       let bmp = NSBitmapImageRep(data: tiff),
+                       let png = bmp.representation(using: .png, properties: [:]) {
+                        pb.setData(png, forType: .png)
+                    }
+                    activeStore.lastScreenshot = image
+                    showBrowserToast("Скриншот скопирован в буфер")
+                } else {
+                    showBrowserToast("Не удалось сделать скриншот")
+                }
+            }
+        }
+    }
+
+    private func showBrowserToast(_ text: String) {
+        browserToastTask?.cancel()
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
+            browserToastText = text
+        }
+        browserToastTask = Task {
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.22)) {
+                    browserToastText = nil
+                }
+            }
+        }
+    }
+
     // ── Toolbar ──────────────────────────────────────────────────
 
     private var toolbar: some View {
         HStack(spacing: 7) {
             // Navigation
-            navBtn("chevron.left", on: store.canGoBack) { store.goBack() }
-            navBtn("chevron.right", on: store.canGoForward) { store.goForward() }
-            navBtn(store.isLoading ? "xmark" : "arrow.clockwise", on: true) {
-                store.isLoading ? store.webView.stopLoading() : store.reload()
+            navBtn("chevron.left", on: activeStore.canGoBack) { activeStore.goBack() }
+            navBtn("chevron.right", on: activeStore.canGoForward) { activeStore.goForward() }
+            navBtn(activeStore.isLoading ? "xmark" : "arrow.clockwise", on: true) {
+                activeStore.isLoading ? activeStore.webView.stopLoading() : activeStore.reload()
             }
 
             // Address bar
-            TextField("Адрес или поисковый запрос", text: $store.address)
+            TextField("Адрес или поисковый запрос", text: $activeStore.address)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12.5))
                 .foregroundStyle(WAI.text)
@@ -1156,34 +1400,27 @@ struct BrowserPaneView: View {
                                 .stroke(WAI.line, lineWidth: 1)
                         )
                 )
-                .onSubmit { store.navigate(store.address) }
+                .onSubmit { activeStore.navigate(activeStore.address) }
 
             // Status pill
             HStack(spacing: 5) {
                 Circle()
-                    .fill(store.isLoading ? WAI.accentBright : WAI.success)
+                    .fill(activeStore.isLoading ? WAI.accentBright : WAI.success)
                     .frame(width: 5, height: 5)
-                    .animation(.easeInOut(duration: 0.3), value: store.isLoading)
-                Text(store.isLoading ? "Загрузка" : "Готово")
+                    .animation(.easeInOut(duration: 0.3), value: activeStore.isLoading)
+                Text(activeStore.isLoading ? "Загрузка" : "Готово")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(WAI.textFaint)
             }
             .frame(width: 74, alignment: .trailing)
 
-            // Screenshot
+            // Screenshot → clipboard + toast
             toolBtn(screenshotCopied ? "checkmark" : "camera", accent: screenshotCopied) {
+                captureBrowserScreenshotToClipboard()
+                screenshotCopied = true
                 Task {
-                    do {
-                        _ = try await store.takeScreenshotAndCopy()
-                        screenshotToast = "Скриншот скопирован — вставьте через ⌘V"
-                        screenshotCopied = true
-                    } catch {
-                        screenshotToast = error.localizedDescription
-                        screenshotCopied = false
-                    }
                     try? await Task.sleep(nanoseconds: 1_800_000_000)
                     screenshotCopied = false
-                    screenshotToast = ""
                 }
             }
             .help("Скриншот → буфер обмена (⌘V в чат)")
@@ -1192,7 +1429,7 @@ struct BrowserPaneView: View {
             toolBtn("pencil.and.outline", accent: showAnnotation) {
                 Task {
                     do {
-                        _ = try await store.takeScreenshotAndCopy()
+                        _ = try await activeStore.takeScreenshotAndCopy()
                         showAnnotation = true
                     } catch {
                         screenshotToast = error.localizedDescription
@@ -1205,7 +1442,7 @@ struct BrowserPaneView: View {
 
             // Zoom controls
             HStack(spacing: 3) {
-                Button { store.setZoom(store.zoom - 0.1) } label: {
+                Button { activeStore.setZoom(activeStore.zoom - 0.1) } label: {
                     Image(systemName: "minus")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(WAI.textDim)
@@ -1214,14 +1451,14 @@ struct BrowserPaneView: View {
                 .buttonStyle(.plain)
                 .help("Уменьшить")
 
-                Text("\(Int(store.zoom * 100))%")
+                Text("\(Int(activeStore.zoom * 100))%")
                     .font(.system(size: 10.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(WAI.textFaint)
                     .frame(width: 36, alignment: .center)
-                    .onTapGesture { store.setZoom(1.0) }
+                    .onTapGesture { activeStore.setZoom(1.0) }
                     .help("Сбросить масштаб (100%)")
 
-                Button { store.setZoom(store.zoom + 0.1) } label: {
+                Button { activeStore.setZoom(activeStore.zoom + 0.1) } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(WAI.textDim)
@@ -1286,21 +1523,21 @@ struct BrowserPaneView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(WAI.textMuted)
 
-            TextField("Найти на странице…", text: $store.findQuery)
+            TextField("Найти на странице…", text: $activeStore.findQuery)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .foregroundStyle(WAI.text)
-                .onSubmit { store.findNext() }
+                .onSubmit { activeStore.findNext() }
 
             Spacer(minLength: 0)
 
             HStack(spacing: 3) {
-                findNavBtn("chevron.up") { store.findPrevious() }
-                findNavBtn("chevron.down") { store.findNext() }
+                findNavBtn("chevron.up") { activeStore.findPrevious() }
+                findNavBtn("chevron.down") { activeStore.findNext() }
             }
 
             Button {
-                withAnimation { store.toggleFind() }
+                withAnimation { activeStore.toggleFind() }
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
@@ -1324,13 +1561,13 @@ struct BrowserPaneView: View {
     private var browserMenu: some View {
         Menu {
             Button {
-                store.hardReload()
+                activeStore.hardReload()
             } label: {
                 Label("Принудительно перезагрузить", systemImage: "arrow.clockwise.circle")
             }
 
             Button {
-                withAnimation { store.toggleFind() }
+                withAnimation { activeStore.toggleFind() }
             } label: {
                 Label("Найти на странице", systemImage: "magnifyingglass")
             }
@@ -1351,23 +1588,23 @@ struct BrowserPaneView: View {
 
             Divider()
 
-            Menu("Масштаб: \(Int(store.zoom * 100))%") {
-                Button("Увеличить (+10%)") { store.setZoom(store.zoom + 0.1) }
-                Button("Уменьшить (−10%)") { store.setZoom(store.zoom - 0.1) }
+            Menu("Масштаб: \(Int(activeStore.zoom * 100))%") {
+                Button("Увеличить (+10%)") { activeStore.setZoom(activeStore.zoom + 0.1) }
+                Button("Уменьшить (−10%)") { activeStore.setZoom(activeStore.zoom - 0.1) }
                 Divider()
-                Button("Сбросить (100%)") { store.setZoom(1.0) }
+                Button("Сбросить (100%)") { activeStore.setZoom(1.0) }
             }
 
             Divider()
 
             Button(role: .destructive) {
-                store.clearCookies()
+                activeStore.clearCookies()
             } label: {
                 Label("Очистить файлы cookie", systemImage: "hand.raised.slash")
             }
 
             Button(role: .destructive) {
-                store.clearCache()
+                activeStore.clearCache()
             } label: {
                 Label("Очистить кеш", systemImage: "internaldrive")
             }
