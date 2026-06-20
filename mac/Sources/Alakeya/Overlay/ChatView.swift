@@ -53,7 +53,7 @@ struct ChatView: View {
     private let kMinChatPanelWidth:   CGFloat = 640
     private let kIdealChatPanelWidth: CGFloat = 760
     private let kDefaultBrowserWidth: CGFloat = 680
-    private let kDividerHitWidth:     CGFloat = 12    // comfortable hit area
+    private let kDividerHitWidth:     CGFloat = 20    // comfortable hit area
 
     // Persisted sidebar width (UserDefaults)
     @AppStorage("browserSidebarWidth") private var savedBrowserWidth: Double = 600
@@ -133,18 +133,31 @@ struct ChatView: View {
                         // ── Resizable browser panel — always in hierarchy ──
                         // WKWebView never removed → page state survives show/hide/resize.
                         HStack(spacing: 0) {
-                            // Draggable divider: 10 px hit area, 1 px visual line.
-                            // Hover → highlight + resize cursor.
-                            // Double-click → reset to default width.
+                            // Draggable divider: 20px hit area with visible grip handle.
                             ZStack {
+                                // Background line
                                 Rectangle()
                                     .fill((isDraggingDivider || isDividerHovered)
-                                          ? WAI.accent.opacity(0.45)
-                                          : Color.white.opacity(0.08))
-                                    .frame(width: 1)
+                                          ? WAI.accent.opacity(0.5)
+                                          : Color.white.opacity(0.1))
+                                    .frame(width: isDraggingDivider ? 2 : 1)
+
+                                // Grip dots — visible on hover/drag
+                                if isDividerHovered || isDraggingDivider {
+                                    VStack(spacing: 4) {
+                                        ForEach(0..<5, id: \.self) { _ in
+                                            Circle()
+                                                .fill(WAI.accent)
+                                                .frame(width: 3, height: 3)
+                                        }
+                                    }
+                                    .transition(.opacity)
+                                }
                             }
                             .frame(width: kDividerHitWidth)
                             .contentShape(Rectangle())
+                            .animation(.easeOut(duration: 0.15), value: isDividerHovered)
+                            .animation(.easeOut(duration: 0.15), value: isDraggingDivider)
                             .onHover { inside in
                                 isDividerHovered = inside
                                 if inside { NSCursor.resizeLeftRight.push() }
@@ -157,7 +170,7 @@ struct ChatView: View {
                                 savedBrowserWidth = Double(browserWidth)
                             }
                             .gesture(
-                                DragGesture(minimumDistance: 1)
+                                DragGesture(minimumDistance: 1, coordinateSpace: .global)
                                     .onChanged { value in
                                         if !isDraggingDivider {
                                             isDraggingDivider = true
@@ -165,10 +178,6 @@ struct ChatView: View {
                                         }
                                         let newW = dividerDragStart - value.translation.width
                                         browserWidth = max(kMinBrowserWidth, min(maxBW, newW))
-                                        #if DEBUG
-                                        let chatW = geo.size.width - browserWidth - kDividerHitWidth
-                                        print("[Split] avail=\(Int(geo.size.width)) chat=\(Int(chatW)) browser=\(Int(browserWidth)) maxBW=\(Int(maxBW))")
-                                        #endif
                                     }
                                     .onEnded { _ in
                                         isDraggingDivider = false
