@@ -16,11 +16,12 @@ final class FloatingOrbModel: ObservableObject {
 
     init(size: CGFloat, store: AgentStore) {
         self.size = size
-        // Subscribe directly in the model — no SwiftUI mechanism needed.
-        // This fires on @Published willSet which is always on MainActor.
+        // Subscribe directly — fires synchronously in @Published willSet on MainActor.
+        // No receive(on:) so the sink runs in the same run-loop iteration as the
+        // status change, before SwiftUI renders. This guarantees cloudVisible is true
+        // in the same render pass that shows stateText, even for brief status changes.
         statusCancellable = store.$status
-            .dropFirst()  // skip initial value on subscription
-            .receive(on: DispatchQueue.main)
+            .dropFirst()
             .sink { [weak self] status in self?.handleStatus(status) }
     }
 
