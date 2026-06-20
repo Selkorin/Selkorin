@@ -46,6 +46,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.panelController.toggle()
         }
 
+        panelController.onWidgetToggle = { [weak self] in
+            self?.orbController.toggle()
+        }
+
         statusBar.onToggleWidget = { [weak self] in
             self?.orbController.show()
         }

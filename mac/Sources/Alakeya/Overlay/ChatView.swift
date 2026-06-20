@@ -21,6 +21,7 @@ struct ChatView: View {
     var onMinimize    : () -> Void = {}
     var onFullscreen  : () -> Void = {}
     var onBrowserToggle: (Bool) -> Void = { _ in }
+    var onWidgetToggle: (() -> Void)? = nil
 
     @ObservedObject private var browser = AlakeyaBrowser.shared
     @ObservedObject private var profiles = ProfileStore.shared
@@ -126,20 +127,6 @@ struct ChatView: View {
                                 }
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .overlay(alignment: .topLeading) {
-                                if isVoiceCompanionVisible,
-                                   !store.showSettings,
-                                   !agentsOpen,
-                                   !sidebarOpen {
-                                    voiceCompanion
-                                        .padding(.leading, 18)
-                                        .padding(.top, 18)
-                                        .transition(
-                                            .move(edge: .leading)
-                                                .combined(with: .opacity)
-                                        )
-                                }
-                            }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -327,32 +314,15 @@ struct ChatView: View {
             Spacer()
 
             Button {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                    isVoiceCompanionVisible.toggle()
-                }
-                if isVoiceCompanionVisible {
-                    onVoiceStart()
-                } else if isListening {
-                    onVoiceStop()
-                }
+                onWidgetToggle?()
             } label: {
                 personaAsset(size: 24)
                     .frame(width: 30, height: 30)
-                    .background(
-                        Circle().fill(
-                            isVoiceCompanionVisible ? WAI.accentSoft : WAI.surfaceInset
-                        )
-                    )
-                    .overlay(
-                        Circle().stroke(
-                            isVoiceCompanionVisible ? WAI.lineAccent : WAI.line,
-                            lineWidth: 1
-                        )
-                    )
+                    .background(Circle().fill(WAI.surfaceInset))
+                    .overlay(Circle().stroke(WAI.line, lineWidth: 1))
             }
             .buttonStyle(.plain)
-            .help("Вызвать персонажа")
-            .accessibilityLabel("Вызвать персонажа")
+            .help("Показать/скрыть виджет")
             .padding(.trailing, 8)
 
             // Browser toggle

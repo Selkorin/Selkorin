@@ -15,6 +15,7 @@ struct RootView: View {
     var onMinimizePanel: (() -> Void)? = nil
     var onFullscreenPanel: (() -> Void)? = nil
     var onBrowserToggle: ((Bool) -> Void)? = nil
+    var onWidgetToggle: (() -> Void)? = nil
 
     var body: some View {
         Group {
@@ -45,7 +46,8 @@ struct RootView: View {
                     onClose:      { onClosePanel?() },
                     onMinimize:   { onMinimizePanel?() },
                     onFullscreen: { onFullscreenPanel?() },
-                    onBrowserToggle: { onBrowserToggle?($0) })
+                    onBrowserToggle: { onBrowserToggle?($0) },
+                    onWidgetToggle: { onWidgetToggle?() })
             }
         }
         .overlay(alignment: .topTrailing) {

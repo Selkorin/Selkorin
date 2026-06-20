@@ -26,6 +26,8 @@ final class MainPanelWindowController: NSObject, NSWindowDelegate {
     private let voice:  VoiceController
     private let updateManager: UpdateManager
 
+    var onWidgetToggle: (() -> Void)?
+
     // Fullscreen state
     private var isExpanded  = false
     private var normalFrame = NSRect.zero
@@ -83,7 +85,8 @@ final class MainPanelWindowController: NSObject, NSWindowDelegate {
             onClosePanel:      { [weak self] in self?.close() },
             onMinimizePanel:   { [weak self] in self?.minimize() },
             onFullscreenPanel: { [weak self] in self?.toggleFullscreen() },
-            onBrowserToggle:   { [weak self] in self?.setBrowserPresented($0) }
+            onBrowserToggle:   { [weak self] in self?.setBrowserPresented($0) },
+            onWidgetToggle:    { [weak self] in self?.onWidgetToggle?() }
         )
         let hvc = NSHostingController(rootView: root.environment(\.colorScheme, .dark))
         w.contentViewController = hvc
