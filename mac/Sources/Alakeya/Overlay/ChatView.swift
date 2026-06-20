@@ -316,8 +316,8 @@ struct ChatView: View {
             Button {
                 onWidgetToggle?()
             } label: {
-                personaAsset(size: 24)
-                    .frame(width: 30, height: 30)
+                personaAsset(size: 30)
+                    .frame(width: 38, height: 38)
                     .background(Circle().fill(WAI.surfaceInset))
                     .overlay(Circle().stroke(WAI.line, lineWidth: 1))
             }

@@ -21,9 +21,9 @@ private final class TransparentHostingView<Content: View>: NSHostingView<Content
 
 private let kOrbPositionKey = "alakeya.orb.position"
 private let kOrbSizeKey = "alakeya.orb.size"
-private let kOrbDefaultSize: CGFloat = 72
-private let kOrbMinSize: CGFloat = 56
-private let kOrbMaxSize: CGFloat = 160
+private let kOrbDefaultSize: CGFloat = 160
+private let kOrbMinSize: CGFloat = 80
+private let kOrbMaxSize: CGFloat = 320
 private let kOrbSafeInset: CGFloat = 120
 private let kOrbVisualScale: CGFloat = 0.5
 private let kOrbMinimumVisible: CGFloat = 12
@@ -135,6 +135,12 @@ final class FloatingOrbWindowController: NSObject, NSWindowDelegate {
         guard saved > 0 else { return kOrbDefaultSize }
 
         if saved < kOrbMinSize || saved > kOrbMaxSize {
+            UserDefaults.standard.set(Double(kOrbDefaultSize), forKey: kOrbSizeKey)
+            return kOrbDefaultSize
+        }
+
+        // Migrate from old small sizes (pre-resize update)
+        if saved < 100 {
             UserDefaults.standard.set(Double(kOrbDefaultSize), forKey: kOrbSizeKey)
             return kOrbDefaultSize
         }
