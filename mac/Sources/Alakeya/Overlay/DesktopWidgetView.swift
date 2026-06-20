@@ -126,17 +126,28 @@ struct FloatingOrbView: View {
     var onResize: ((CGFloat, Bool) -> Void)?
     var onMove: ((NSPoint, Bool) -> Void)?
 
+    @State private var cloudShownAt: Date? = nil
+
     var body: some View {
         HStack(spacing: 10) {
             orbArea
 
-            if let stateText {
-                stateCloud(stateText)
-                    .transition(
-                        .opacity.combined(
-                            with: .scale(scale: 0.92, anchor: .leading)
-                        )
-                    )
+            if let text = stateText {
+                // onAppear resets the timer each time status becomes non-ready.
+                // onDisappear clears it when status returns to ready.
+                TimelineView(.periodic(from: .now, by: 0.25)) { ctx in
+                    let elapsed = cloudShownAt.map { ctx.date.timeIntervalSince($0) } ?? 999
+                    if elapsed < 3.0 {
+                        stateCloud(text)
+                            .transition(
+                                .opacity.combined(
+                                    with: .scale(scale: 0.92, anchor: .leading)
+                                )
+                            )
+                    }
+                }
+                .onAppear  { cloudShownAt = Date() }
+                .onDisappear { cloudShownAt = nil  }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
