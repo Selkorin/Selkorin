@@ -43,7 +43,7 @@ final class FloatingOrbWindowController: NSObject, NSWindowDelegate {
 
     init(store: AgentStore) {
         self.store = store
-        self.model = FloatingOrbModel(size: Self.loadOrbSize())
+        self.model = FloatingOrbModel(size: Self.loadOrbSize(), store: store)
         super.init()
         buildPanel()
         // Observe settings-driven size changes from UserDefaults

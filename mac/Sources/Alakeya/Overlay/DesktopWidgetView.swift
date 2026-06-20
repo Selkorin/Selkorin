@@ -12,14 +12,20 @@ final class FloatingOrbModel: ObservableObject {
     @Published var size: CGFloat
     @Published var cloudVisible = false
     private var hideWorkItem: DispatchWorkItem?
+    private var statusCancellable: AnyCancellable?
 
-    init(size: CGFloat) {
+    init(size: CGFloat, store: AgentStore) {
         self.size = size
+        // Subscribe directly in the model — no SwiftUI mechanism needed.
+        // This fires on @Published willSet which is always on MainActor.
+        statusCancellable = store.$status
+            .dropFirst()  // skip initial value on subscription
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in self?.handleStatus(status) }
     }
 
-    func handleStatus(_ status: AgentStatusLabel) {
-        let hasText = status != .ready
-        if hasText {
+    private func handleStatus(_ status: AgentStatusLabel) {
+        if status != .ready {
             cloudVisible = true
             hideWorkItem?.cancel()
             let item = DispatchWorkItem { [weak self] in self?.cloudVisible = false }
@@ -168,8 +174,6 @@ struct FloatingOrbView: View {
                 onMove: onMove
             )
         )
-        .onAppear { model.handleStatus(store.status) }
-        .onReceive(store.$status) { model.handleStatus($0) }
     }
 
     // ── Orb + aura ────────────────────────────────────────
