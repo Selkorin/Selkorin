@@ -54,9 +54,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // mirroring the mic button in the chat panel.
         statusBar.onPrimaryAction = { [weak self] in
             guard let self else { return }
-            if self.store.status == .listening {
+            if self.voice.isListening {
                 self.voice.stop()
             } else {
+                // The mic button works because the app is frontmost when it is
+                // pressed. A status-bar click leaves the app inactive, which
+                // blocks the audio engine / speech permission. Activate first so
+                // voice.start() runs in the same context as the mic button.
+                NSApp.activate(ignoringOtherApps: true)
                 self.orbController.show()
                 self.voice.start()
             }

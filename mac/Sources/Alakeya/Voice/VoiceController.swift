@@ -12,6 +12,13 @@ final class VoiceController {
     private let recognizer = SpeechRecognizer()
     private var listening = false
 
+    var isListening: Bool { listening }
+
+    /// Toggle listening on/off — used by the menu bar icon.
+    func toggle() {
+        if listening { stop() } else { start() }
+    }
+
     init(store: AgentStore, runner: ToolRunner) {
         self.store = store
         self.runner = runner
