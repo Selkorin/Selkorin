@@ -126,12 +126,15 @@ struct FloatingOrbView: View {
     var onResize: ((CGFloat, Bool) -> Void)?
     var onMove: ((NSPoint, Bool) -> Void)?
 
+    @State private var cloudVisible = false
+    @State private var hideTask: Task<Void, Never>?
+
     var body: some View {
         HStack(spacing: 10) {
             orbArea
 
-            if let stateText {
-                stateCloud(stateText)
+            if cloudVisible, let text = stateText {
+                stateCloud(text)
                     .transition(
                         .opacity.combined(
                             with: .scale(scale: 0.92, anchor: .leading)
@@ -141,7 +144,7 @@ struct FloatingOrbView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .animation(WAI.easeOut, value: store.status)
+        .animation(WAI.easeOut, value: cloudVisible)
         .overlay(
             WidgetInteractionLayer(
                 currentSize: model.size,
@@ -150,6 +153,24 @@ struct FloatingOrbView: View {
                 onMove: onMove
             )
         )
+        .onChange(of: store.status) { newStatus in
+            if stateText != nil {
+                showCloudBriefly()
+            } else {
+                hideTask?.cancel()
+                cloudVisible = false
+            }
+        }
+    }
+
+    private func showCloudBriefly() {
+        cloudVisible = true
+        hideTask?.cancel()
+        hideTask = Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run { cloudVisible = false }
+        }
     }
 
     // ── Orb + aura ────────────────────────────────────────
