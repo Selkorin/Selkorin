@@ -473,7 +473,8 @@ struct ChatView: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.vertical, 28)
-                        .frame(maxWidth: min(760, geo.size.width), alignment: .topLeading)
+                        .frame(maxWidth: min(760, geo.size.width))
+                        .frame(maxWidth: .infinity)
                     }
                 }
                 Color.clear
@@ -679,6 +680,7 @@ struct ChatView: View {
                 )
         )
         .shadow(color: WAI.accentGlow.opacity(0.10), radius: 14, y: 4)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
         .background(WAI.canvas)
