@@ -182,7 +182,9 @@ struct ChatView: View {
     private var normalWorkspaceLayout: some View {
         HStack(spacing: 0) {
             chatAreaLayout
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
+                .layoutPriority(1)
+                .clipped()
             if browser.isPresented {
                 BrowserPaneView(
                     store: browser.store,
@@ -195,6 +197,7 @@ struct ChatView: View {
                 )
                 .frame(width: 390)
                 .frame(maxHeight: .infinity)
+                .layoutPriority(0)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -244,44 +247,45 @@ struct ChatView: View {
 
     @ViewBuilder
     private var chatAreaLayout: some View {
-        GeometryReader { geo in
-            HStack(spacing: 0) {
-                if navigationExpanded && !store.showSettings {
-                    AgentSidebarView(
-                        store: store,
-                        agentsOpen: $agentsOpen,
-                        sidebarOpen: $sidebarOpen,
-                        showsExpandedNavigation: showsExpandedNavigation,
-                        onStartChat: {}
-                    )
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                }
-                if sidebarOpen {
-                    SidebarView(store: store, isOpen: $sidebarOpen)
-                        .transition(.opacity)
-                }
-                VStack(spacing: 0) {
-                    if store.showSettings {
-                        SettingsView(
-                            store: store,
-                            updateManager: updateManager,
-                            onClose: { store.showSettings = false },
-                            tab: $settingsTab
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if agentsOpen {
-                        AgentWorkspaceView(store: store) {
-                            agentsOpen = false
-                        }
-                    } else {
-                        middleArea(chatW: geo.size.width)
-                        inputBar(chatW: geo.size.width)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        HStack(spacing: 0) {
+            if navigationExpanded && !store.showSettings {
+                AgentSidebarView(
+                    store: store,
+                    agentsOpen: $agentsOpen,
+                    sidebarOpen: $sidebarOpen,
+                    showsExpandedNavigation: showsExpandedNavigation,
+                    onStartChat: {}
+                )
+                .transition(.move(edge: .leading).combined(with: .opacity))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if sidebarOpen {
+                SidebarView(store: store, isOpen: $sidebarOpen)
+                    .transition(.opacity)
+            }
+            VStack(spacing: 0) {
+                if store.showSettings {
+                    SettingsView(
+                        store: store,
+                        updateManager: updateManager,
+                        onClose: { store.showSettings = false },
+                        tab: $settingsTab
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if agentsOpen {
+                    AgentWorkspaceView(store: store) {
+                        agentsOpen = false
+                    }
+                } else {
+                    middleArea
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    inputBar
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
+            .layoutPriority(1)
         }
+        .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // ── Browser state machine helpers ─────────────────────
@@ -440,7 +444,7 @@ struct ChatView: View {
 
     // ── Middle area (messages) ────────────────────────────
 
-    private func middleArea(chatW: CGFloat) -> some View {
+    private var middleArea: some View {
         GeometryReader { geo in
             ScrollViewReader { proxy in
                 if isFreshChat {
@@ -453,7 +457,7 @@ struct ChatView: View {
                             ForEach(store.messages) { msg in
                                 MessageBubbleView(
                                     message: msg,
-                                    chatWidth: chatW,
+                                    chatWidth: geo.size.width,
                                     userName: profiles.user.name,
                                     userAvatar: profiles.userAvatar(),
                                     assistantName: activeAssistantName,
@@ -469,7 +473,7 @@ struct ChatView: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.vertical, 28)
-                        .frame(maxWidth: min(760, chatW), alignment: .topLeading)
+                        .frame(maxWidth: min(760, geo.size.width), alignment: .topLeading)
                     }
                 }
                 Color.clear
@@ -614,7 +618,7 @@ struct ChatView: View {
 
     // ── Input bar ─────────────────────────────────────────
 
-    private func inputBar(chatW: CGFloat) -> some View {
+    private var inputBar: some View {
         let hasText = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return HStack(spacing: 8) {
             Button {
@@ -665,7 +669,7 @@ struct ChatView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .frame(maxWidth: min(760, chatW))
+        .frame(maxWidth: 760)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(WAI.control)
