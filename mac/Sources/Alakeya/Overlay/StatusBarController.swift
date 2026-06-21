@@ -1,20 +1,33 @@
 import AppKit
 import SwiftUI
 
+// Transparent overlay added as subview of NSStatusBarButton.
+// mouseDown fires reliably regardless of .app bundle / swift run context,
+// exactly like WidgetInteractionView does for the floating orb.
+private final class StatusBarClickView: NSView {
+    var onClick: (() -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        onClick?()
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override var isOpaque: Bool { false }
+}
+
 // ============================================================
 // StatusBarController.swift
-// Menu bar icon with a minimal dropdown.
+// Menu bar icon — single left-click toggles voice listening.
 // ============================================================
 
 @MainActor
 final class StatusBarController: NSObject, NSMenuDelegate {
 
     private var statusItem: NSStatusItem!
+    private var clickOverlay: StatusBarClickView?
     private var widgetEverShown = false
 
-    /// Toggles voice listening (start/stop). First item of the menu.
     var onToggleVoice: (() -> Void)?
-    /// Returns whether voice is currently listening, for the menu title.
     var isVoiceActive: (() -> Bool)?
     var onToggleWidget: (() -> Void)?
     var onOpenSettings: (() -> Void)?
@@ -23,29 +36,42 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         super.init()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = makeIcon()
-        statusItem.button?.toolTip = "Alakeya"
+        statusItem.button?.toolTip = "Alakeya — нажмите, чтобы говорить"
 
-        // A persistent menu is the only click handling that works reliably
-        // when running via `swift run` (no .app bundle). The first item is
-        // the voice toggle — one click on the icon, one click to start.
+        // Attach right-click menu (no left-click menu — overlay handles that).
         let menu = buildMenu()
         menu.delegate = self
         statusItem.menu = menu
+
+        // Add transparent overlay on top of the button so mouseDown fires
+        // directly without going through the broken target/action path.
+        // We do this AFTER setting the menu so the overlay sits on top.
+        DispatchQueue.main.async { [weak self] in
+            self?.installClickOverlay()
+        }
     }
 
-    // ── Menu ──────────────────────────────────────────────
+    private func installClickOverlay() {
+        guard let button = statusItem.button else { return }
+        let overlay = StatusBarClickView()
+        overlay.frame = button.bounds
+        overlay.autoresizingMask = [.width, .height]
+        overlay.wantsLayer = true
+        overlay.layer?.backgroundColor = NSColor.clear.cgColor
+        overlay.onClick = { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                self.onToggleVoice?()
+            }
+        }
+        button.addSubview(overlay)
+        clickOverlay = overlay
+    }
+
+    // ── Menu (right-click) ────────────────────────────────
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
-
-        let voiceItem = NSMenuItem(
-            title: "🎤 Слушать",
-            action: #selector(handleVoiceToggle),
-            keyEquivalent: "")
-        voiceItem.target = self
-        menu.addItem(voiceItem)
-
-        menu.addItem(.separator())
 
         let widgetItem = NSMenuItem(
             title: widgetEverShown ? "Показать виджет" : "Добавить виджет",
@@ -71,17 +97,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     nonisolated func menuWillOpen(_ menu: NSMenu) {
         Task { @MainActor in
-            let listening = self.isVoiceActive?() ?? false
-            menu.items.first?.title = listening ? "⏹ Остановить" : "🎤 Слушать"
-            if menu.items.count > 2 {
-                menu.items[2].title = self.widgetEverShown ? "Показать виджет" : "Добавить виджет"
-            }
+            menu.items.first?.title = self.widgetEverShown ? "Показать виджет" : "Добавить виджет"
         }
-    }
-
-    @objc private func handleVoiceToggle() {
-        widgetEverShown = true
-        onToggleVoice?()
     }
 
     @objc private func handleWidgetItem() {

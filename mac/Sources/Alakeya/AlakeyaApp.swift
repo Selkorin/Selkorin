@@ -50,8 +50,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.orbController.toggle()
         }
 
-        // "Слушать / Остановить" menu item toggles voice — same as the mic
-        // button — and shows the orb so its listening animation is visible.
+        // Left click on the bar icon toggles voice — same as the mic button.
+        // The overlay inside NSStatusBarButton fires mouseDown directly,
+        // bypassing the broken target/action path in swift run context.
         statusBar.onToggleVoice = { [weak self] in
             guard let self else { return }
             if self.voice.isListening {
@@ -61,11 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.voice.start()
             }
         }
-        statusBar.isVoiceActive = { [weak self] in
-            self?.voice.isListening ?? false
-        }
 
-        // "Показать виджет" menu item just reveals the orb.
         statusBar.onToggleWidget = { [weak self] in
             self?.orbController.show()
         }
