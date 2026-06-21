@@ -5,10 +5,17 @@ import SwiftUI
 // mouseDown fires reliably regardless of .app bundle / swift run context,
 // exactly like WidgetInteractionView does for the floating orb.
 private final class StatusBarClickView: NSView {
-    var onClick: (() -> Void)?
+    var onLeftClick: (() -> Void)?
+    var onRightClick: (() -> Void)?
 
     override func mouseDown(with event: NSEvent) {
-        onClick?()
+        print("[BAR] overlay mouseDown (left)")
+        onLeftClick?()
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        print("[BAR] overlay rightMouseDown")
+        onRightClick?()
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
@@ -38,14 +45,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         statusItem.button?.image = makeIcon()
         statusItem.button?.toolTip = "Alakeya — нажмите, чтобы говорить"
 
-        // Attach right-click menu (no left-click menu — overlay handles that).
-        let menu = buildMenu()
-        menu.delegate = self
-        statusItem.menu = menu
-
-        // Add transparent overlay on top of the button so mouseDown fires
-        // directly without going through the broken target/action path.
-        // We do this AFTER setting the menu so the overlay sits on top.
+        // NO statusItem.menu — it would intercept clicks before the overlay.
+        // Add a transparent overlay on top of the button. Its mouseDown fires
+        // directly, exactly like WidgetInteractionView on the floating orb.
         DispatchQueue.main.async { [weak self] in
             self?.installClickOverlay()
         }
@@ -58,14 +60,22 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         overlay.autoresizingMask = [.width, .height]
         overlay.wantsLayer = true
         overlay.layer?.backgroundColor = NSColor.clear.cgColor
-        overlay.onClick = { [weak self] in
-            guard let self else { return }
-            Task { @MainActor in
-                self.onToggleVoice?()
-            }
+        overlay.onLeftClick = { [weak self] in
+            self?.onToggleVoice?()
+        }
+        overlay.onRightClick = { [weak self] in
+            self?.showMenu()
         }
         button.addSubview(overlay)
         clickOverlay = overlay
+    }
+
+    private func showMenu() {
+        let menu = buildMenu()
+        menu.delegate = self
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
     }
 
     // ── Menu (right-click) ────────────────────────────────
