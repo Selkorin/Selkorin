@@ -27,16 +27,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
 
-        // Check permissions on launch WITHOUT triggering prompts
-        let perms = PermissionsManager.shared
-        if !perms.accessibilityGranted {
-            // Only show prompt if permission is missing
-            _ = perms.requestAccessibility()
-        }
-        if !perms.screenRecordingGranted {
-            // Only show prompt if permission is missing
-            _ = perms.requestScreenRecording()
-        }
+        // Read current TCC statuses without prompting or opening System
+        // Settings — nagging on every launch trains users to ignore it.
+        // Permissions are requested in context: onboarding, the Permissions
+        // settings tab, or the first action that actually needs them.
+        PermissionsManager.shared.refreshStatuses()
+        PermissionsManager.shared.startMonitoring()
 
         store  = AgentStore()
         runner = ToolRunner(store: store)

@@ -8,10 +8,10 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var store: AgentStore
     @ObservedObject var updateManager: UpdateManager
+    @ObservedObject private var perms = PermissionsManager.shared
     var onClose: () -> Void
 
     @Binding var tab: String
-    @State private var permissionsRefreshToken = UUID()
 
     private let tabs: [(String, String, String)] = [
         ("profile", "Профиль", "person.crop.circle"),
@@ -62,19 +62,24 @@ struct SettingsView: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
 
-            ForEach(tabs, id: \.0) { t in
-                Button { tab = t.0 } label: {
-                    Label(t.1, systemImage: t.2)
-                        .font(.system(size: 12.5, weight: tab == t.0 ? .semibold : .regular))
-                        .foregroundStyle(tab == t.0 ? WAI.text : WAI.textMuted)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .frame(height: 36)
-                        .background(tab == t.0 ? WAI.accentSoft : .clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 9))
-                }.buttonStyle(.plain)
+            // The tab list is taller than the minimum window height —
+            // without its own ScrollView the bottom tabs are unreachable.
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(tabs, id: \.0) { t in
+                        Button { tab = t.0 } label: {
+                            Label(t.1, systemImage: t.2)
+                                .font(.system(size: 12.5, weight: tab == t.0 ? .semibold : .regular))
+                                .foregroundStyle(tab == t.0 ? WAI.text : WAI.textMuted)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 10)
+                                .frame(height: 36)
+                                .background(tab == t.0 ? WAI.accentSoft : .clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 9))
+                        }.buttonStyle(.plain)
+                    }
+                }
             }
-            Spacer()
         }
         .padding(14)
         .frame(width: 224, alignment: .topLeading)
@@ -124,71 +129,49 @@ struct SettingsView: View {
     }
 
     private var permissions: some View {
-        let _ = permissionsRefreshToken
-        return VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 18) {
             section("Разрешения") {
+                Text("Статусы обновляются автоматически — после включения доступа в Системных настройках просто вернитесь в это окно.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(WAI.textMuted)
+
                 permissionCard(
                     title: "Захват экрана",
                     subtitle: "Нужен, чтобы Алакея видела экран и могла проверять действия computer-agent.",
                     systemImage: "rectangle.on.rectangle",
-                    granted: PermissionsManager.shared.screenRecordingGranted,
+                    granted: perms.screenRecordingGranted,
                     kind: .screenRecording
                 ) {
-                    _ = PermissionsManager.shared.requestScreenRecording()
-                    PermissionsManager.shared.openSettings(.screenRecording)
+                    _ = perms.requestScreenRecording()
                 }
 
                 permissionCard(
                     title: "Управление компьютером",
                     subtitle: "Accessibility: клики, клавиатура, Finder, окна и действия в приложениях.",
                     systemImage: "cursorarrow.click.2",
-                    granted: PermissionsManager.shared.accessibilityGranted,
+                    granted: perms.accessibilityGranted,
                     kind: .accessibility
                 ) {
-                    _ = PermissionsManager.shared.requestAccessibility()
-                    PermissionsManager.shared.openSettings(.accessibility)
+                    _ = perms.requestAccessibility()
                 }
 
                 permissionCard(
                     title: "Микрофон",
                     subtitle: "Для голосовых команд и диктовки.",
                     systemImage: "mic",
-                    granted: PermissionsManager.shared.microphoneGranted,
+                    granted: perms.microphoneGranted,
                     kind: .microphone
                 ) {
-                    Task {
-                        _ = await PermissionsManager.shared.requestMicrophone()
-                        await MainActor.run {
-                            PermissionsManager.shared.openSettings(.microphone)
-                            permissionsRefreshToken = UUID()
-                        }
-                    }
+                    Task { _ = await perms.requestMicrophone() }
                 }
             }
 
-            if !PermissionsManager.shared.accessibilityGranted {
-                HStack(spacing: 12) {
-                    Image(systemName: "info.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(WAI.accentBright)
-                    Text("После включения Accessibility в настройках macOS необходимо перезапустить Alakeya")
-                        .font(.system(size: 12))
-                        .foregroundStyle(WAI.textMuted)
-                }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(WAI.accentSoft)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(WAI.accent.opacity(0.3), lineWidth: 1))
-                )
-            }
-
-            if !PermissionsManager.shared.screenRecordingGranted {
+            if !perms.screenRecordingGranted {
                 HStack(spacing: 12) {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(WAI.warning)
-                    Text("После включения Запись экрана в настройках macOS необходимо перезапустить Alakeya")
+                    Text("Запись экрана начинает действовать после перезапуска Alakeya (требование macOS). Управление компьютером и микрофон работают сразу.")
                         .font(.system(size: 12))
                         .foregroundStyle(WAI.textMuted)
                 }
@@ -200,8 +183,52 @@ struct SettingsView: View {
                 )
             }
 
+            // Recovery for the classic TCC trap: the checkbox in System
+            // Settings is ON, but access doesn't work because the grant
+            // belongs to a previous build of the app (signature changed
+            // after an update). Reset clears the stale entry so the toggle
+            // can be granted fresh.
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Разрешение включено, но не работает?")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(WAI.text)
+                Text("После обновления приложения macOS может держать доступ за старой версией: галочка в Системных настройках стоит, а Alakeya пишет «Не включено». Сбросьте разрешение и выдайте его заново.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(WAI.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Button {
+                        _ = perms.resetStaleGrant(.accessibility)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            _ = perms.requestAccessibility()
+                        }
+                    } label: {
+                        Label("Сбросить «Управление компьютером»", systemImage: "arrow.counterclockwise")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        _ = perms.resetStaleGrant(.screenRecording)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            _ = perms.requestScreenRecording()
+                        }
+                    } label: {
+                        Label("Сбросить «Захват экрана»", systemImage: "arrow.counterclockwise")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(WAI.surface)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(WAI.line, lineWidth: 1))
+            )
+
             Button {
-                permissionsRefreshToken = UUID()
+                perms.refreshStatuses()
             } label: {
                 Label("Проверить статусы", systemImage: "arrow.clockwise")
                     .font(.system(size: 12.5, weight: .semibold))
@@ -209,6 +236,7 @@ struct SettingsView: View {
             .buttonStyle(.plain)
             .foregroundStyle(WAI.accentBright)
         }
+        .onAppear { perms.refreshStatuses() }
     }
 
     private var automation: some View {
@@ -318,10 +346,9 @@ struct SettingsView: View {
                     if newValue {
                         request()
                     } else {
-                        PermissionsManager.shared.openSettings(kind)
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                        permissionsRefreshToken = UUID()
+                        // macOS gives no API to revoke a grant — the user
+                        // does it in System Settings.
+                        perms.openSettings(kind)
                     }
                 }
             ))
@@ -330,10 +357,7 @@ struct SettingsView: View {
             .tint(WAI.accent)
 
             Button {
-                PermissionsManager.shared.openSettings(kind)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    permissionsRefreshToken = UUID()
-                }
+                perms.openSettings(kind)
             } label: {
                 Image(systemName: "arrow.up.forward.app")
                     .font(.system(size: 13, weight: .semibold))

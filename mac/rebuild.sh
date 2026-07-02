@@ -1,13 +1,24 @@
 #!/bin/bash
-# Скрипт для пересборки приложения Alakeya
+# Пересборка и переустановка Alakeya.
+#
+# ВАЖНО: нельзя просто копировать бинарник внутрь установленного .app —
+# это ломает подпись кода, и macOS отзывает выданные разрешения
+# (Accessibility/Запись экрана): галочка в Системных настройках остаётся,
+# но доступ перестаёт работать. Поэтому собираем и подписываем целиком
+# через install_app.sh.
+#
+# Для стабильных разрешений между сборками задайте подпись:
+#   CODESIGN_IDENTITY='Developer ID Application: ...' ./rebuild.sh
 
 set -e
 
-echo "🔨 Пересборка Alakeya..."
-swift build
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "📦 Копирование исполняемого файла..."
-cp .build/x86_64-apple-macosx/debug/Alakeya /Applications/Alakeya.app/Contents/MacOS/
+echo "🔨 Пересборка Alakeya…"
+bash "$DIR/scripts/install_app.sh" "${1:-release}"
 
-echo "✅ Готово! Приложение пересобрано."
-echo "ℹ️  После включения Accessibility в настройках macOS необходимо перезапустить Alakeya"
+echo "✅ Готово."
+if [ -z "${CODESIGN_IDENTITY:-}" ]; then
+    echo "ℹ️  Сборка подписана ad-hoc: если разрешения перестали работать,"
+    echo "ℹ️  откройте Alakeya → Настройки → Разрешения → «Сбросить…» и выдайте заново."
+fi

@@ -171,7 +171,7 @@ enum SearchQueryPlanner {
 
             return queries.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
 
-        case .factualQuestion, .academicResearch:
+        case .factualQuestion:
             var queries = [
                 query,
                 "\(query) официальный источник",
@@ -186,6 +186,30 @@ enum SearchQueryPlanner {
                 "\(query) экспертное мнение",
                 "\(query) статистика данные",
                 "\(query) официальные данные"
+            ]
+
+            return queries.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+
+        case .academicResearch:
+            // Graduate/postgraduate-level coverage: peer-reviewed sources in
+            // Russian AND English, reviews/meta-analyses first, then primary
+            // studies, methodology and critique. Works for any profession —
+            // the scholarly databases below are cross-disciplinary.
+            let queries = [
+                query,
+                "\(query) систематический обзор",
+                "\(query) мета-анализ",
+                "\(query) диссертация автореферат",
+                "\(query) site:cyberleninka.ru",
+                "\(query) site:elibrary.ru",
+                "\(query) review \(year)",
+                "\(query) state of the art",
+                "\(query) systematic review OR meta-analysis",
+                "\(query) site:scholar.google.com",
+                "\(query) site:arxiv.org",
+                "\(query) site:pubmed.ncbi.nlm.nih.gov",
+                "\(query) методология исследования критика",
+                "\(query) нерешённые проблемы открытые вопросы",
             ]
 
             return queries.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -264,8 +288,12 @@ enum SearchQueryPlanner {
             return ["ostrovok.ru", "101hotels.com", "tripadvisor.com", "votpusk.ru", "official sites"]
         case .localBusinessSearch, .contactResearch, .clientResearch:
             return ["2gis.ru", "official sites", "company contact pages", "schema.org/json-ld"]
-        case .factualQuestion, .academicResearch:
+        case .factualQuestion:
             return ["wikipedia.org", "rbc.ru", "ria.ru", "interfax.ru"]
+        case .academicResearch:
+            return ["scholar.google.com", "cyberleninka.ru", "elibrary.ru",
+                    "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "semanticscholar.org",
+                    "nature.com", "sciencedirect.com", "link.springer.com", "jstor.org"]
         case .socialProfileResearch:
             return ["vk.com", "instagram.com", "linkedin.com"]
         case .topList:
@@ -289,6 +317,9 @@ enum SearchQueryPlanner {
             return ("list_items", ["name", "rank", "description", "rating", "source"])
         case .seoResearch:
             return ("seo_data", ["title", "description", "h1", "canonical", "robotsMeta", "problems", "quickWins"])
+        case .academicResearch:
+            return ("scholarly_synthesis", ["claim", "evidence", "methodology", "sampleOrScope",
+                                            "limitations", "competingViews", "sourceTier", "citation", "openQuestions"])
         default:
             return ("article_content", ["title", "summary", "keyFacts", "source"])
         }
@@ -302,8 +333,17 @@ enum SearchQueryPlanner {
             return "Выполни спокойный поиск через search_internet/browser_agent_search без открытия UI-браузера; для рейтингов и подборок извлекай страницы, а не только SERP. Не используй Яндекс/Google как массовый источник по умолчанию. Не отвечай списком ссылок. Собери кандидатов из нескольких источников, отфильтруй антибот/капчу/тонкие страницы, дедуплицируй по названию, выбери лучшие и дай конечный ответ таблицей: № | Отель | Локация | Почему выбран | Рейтинг/отзывы | Телефон/контакты | Доверие | Источник. Если телефона или рейтинга нет — ставь «—», не выдумывай. Ниже блок «Источники» с Markdown-ссылками и короткая строка о частичности данных."
         case .localBusinessSearch, .contactResearch, .clientResearch:
             return "Начни с 2ГИС/официальных сайтов/contact pages через browser_agent_search/search_internet без открытия UI-браузера. UI-карты используй только если пользователь явно просит карты или headless-поиск не дал контакты. Не используй Яндекс по умолчанию. Собери имя, телефон, адрес, сайт, доверие/статус источника. Отбрасывай строки без реального названия организации. Источники оформляй как [Название](url), без голых длинных URL. Предложи экспорт в CSV или Google Sheets."
-        case .factualQuestion, .academicResearch:
+        case .factualQuestion:
             return "Сначала проверь официальный источник. Затем минимум 1 независимый. Если данные расходятся — укажи это. Добавь ссылки в источники."
+        case .academicResearch:
+            return """
+            Работай на уровне аспирантского обзора литературы, независимо от дисциплины. Протокол:
+            1) Иерархия источников: сначала систематические обзоры и мета-анализы, затем рецензируемые статьи и диссертации, затем монографии/стандарты; новостные и блоговые источники — только как иллюстрация, не как доказательство. Ищи и на русском, и на английском.
+            2) Для каждого ключевого утверждения фиксируй: доказательство, методологию (как получены данные, выборка/охват), ограничения и уровень доверия к источнику (обзор > статья > препринт > СМИ).
+            3) Покажи конкурирующие школы/подходы и в чём именно они расходятся — не сглаживай противоречия. Если консенсуса нет, скажи это прямо.
+            4) Используй точную терминологию профессии из запроса, дай определения ключевых понятий при первом употреблении.
+            5) Заверши разделами: «Методологические ограничения», «Открытые вопросы» (что ещё не решено в области) и «Источники» — оформленными Markdown-ссылками [Автор/Название (год)](url). Не выдумывай DOI и цитаты: если точной ссылки нет — укажи, где её искать (база, журнал, автор).
+            """
         case .socialProfileResearch:
             return "Ищи только публичную информацию. Не пытайся получить приватные данные. Укажи источник каждого факта."
         case .seoResearch:

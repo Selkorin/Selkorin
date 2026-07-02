@@ -179,6 +179,38 @@ final class LocalBusinessSearchCoordinator {
             }
         }
 
+        // ── Structured search API source (Google CSE / Yandex API) ──
+        // Captcha-free lead generation through official search APIs with
+        // targeted queries and contact (phone/email) extraction.
+        if allLeads.count < query.targetCount && LocalBusinessAPILeadSource.isConfigured {
+            store.setToolStatus("Ищу контакты через поисковые API… найдено \(allLeads.count)")
+            let outcome = await LocalBusinessAPILeadSource.collect(query: query, city: city)
+            if outcome.attempted {
+                let sourceLabel = outcome.providerNames.isEmpty
+                    ? "Search API" : outcome.providerNames.joined(separator: "+")
+                sourcesAttempted.append(sourceLabel)
+                let beforeAPI = allLeads.count
+                let candidates = outcome.leads
+                    .filter { LocalBusinessLeadValidator.isActionable($0, requirePhone: query.requirePhone) }
+                for lead in candidates {
+                    let key = LocalBusinessLeadValidator.deduplicateKey(lead)
+                    if !allLeads.contains(where: { LocalBusinessLeadValidator.deduplicateKey($0) == key }) {
+                        allLeads.append(lead)
+                    }
+                    if allLeads.count >= query.targetCount { break }
+                }
+                let added = allLeads.count - beforeAPI
+                diagnostics.append(
+                    LocalBusinessSourceDiagnostic(
+                        name: sourceLabel,
+                        found: added,
+                        status: added > 0 ? "usable_api" : outcome.status
+                    )
+                )
+                print("[LocalBusiness] apiSource=\(sourceLabel) added=\(added)")
+            }
+        }
+
         // ── Filter by noWebsite ───────────────────────────────
         var filteredLeads = allLeads
         if query.requireNoWebsite {

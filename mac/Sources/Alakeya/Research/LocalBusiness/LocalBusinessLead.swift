@@ -26,6 +26,7 @@ struct LocalBusinessLead: Identifiable {
     var city: String
     var address: String
     var phone: String          // empty if not found or masked
+    var email: String          // empty if not found
     var website: String        // raw domain or empty
     var websiteStatus: WebsiteStatus
     var sourceName: String
@@ -34,7 +35,8 @@ struct LocalBusinessLead: Identifiable {
     var confidence: Double     // 0..1
 
     init(name: String = "", category: String = "", city: String = "",
-         address: String = "", phone: String = "", website: String = "",
+         address: String = "", phone: String = "", email: String = "",
+         website: String = "",
          websiteStatus: WebsiteStatus = .unknown,
          sourceName: String = "", sourceURL: String = "",
          notes: String = "", confidence: Double = 0.5) {
@@ -44,6 +46,7 @@ struct LocalBusinessLead: Identifiable {
         self.city          = city
         self.address       = address
         self.phone         = phone
+        self.email         = email
         self.website       = website
         self.websiteStatus = websiteStatus
         self.sourceName    = sourceName
@@ -58,8 +61,11 @@ struct LocalBusinessLead: Identifiable {
 
     /// Convert leads array to ParsedMarkdownTable for chat storage and export.
     static func toTable(_ leads: [LocalBusinessLead], noWebsiteFilter: Bool) -> ParsedMarkdownTable {
-        var headers = ["Название", "Адрес", "Телефон", "Сайт", "Источник"]
-        if noWebsiteFilter { headers.insert("Есть сайт", at: 3) }
+        let hasEmails = leads.contains { !$0.email.isEmpty }
+        var headers = ["Название", "Адрес", "Телефон"]
+        if hasEmails { headers.append("Email") }
+        if noWebsiteFilter { headers.append("Есть сайт") }
+        headers += ["Сайт", "Источник"]
 
         let rows: [[String]] = leads.map { lead in
             var row = [
@@ -67,6 +73,7 @@ struct LocalBusinessLead: Identifiable {
                 lead.address.isEmpty ? "—" : lead.address,
                 lead.phone.isEmpty ? (lead.notes.contains("скрыт") ? "⚠ Скрыт" : "—") : lead.phone,
             ]
+            if hasEmails { row.append(lead.email.isEmpty ? "—" : lead.email) }
             if noWebsiteFilter { row.append(lead.websiteStatus.rawValue) }
             row.append(lead.website.isEmpty ? "—" : lead.website)
             row.append(lead.sourceName.isEmpty ? "—" : lead.sourceName)

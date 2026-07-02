@@ -44,5 +44,38 @@ if [ -d "$RESOURCE_BUNDLE" ]; then
     cp -R "$RESOURCE_BUNDLE" "$APP/Contents/MacOS/"
 fi
 
+# ── Code signing ─────────────────────────────────────────────
+# TCC (Accessibility / Screen Recording) keys grants to the app's code
+# signature. An unsigned/ad-hoc build gets a NEW identity on every
+# rebuild, so macOS silently drops previously granted permissions:
+# the checkbox in System Settings stays ON, but access stops working.
+# Sign with a stable identity to keep permissions across updates.
+#
+# Set CODESIGN_IDENTITY to your "Developer ID Application: ..." (or a
+# self-signed code-signing certificate created once in Keychain Access —
+# also stable). Without it we fall back to ad-hoc and warn.
+IDENTITY="${CODESIGN_IDENTITY:-}"
+ENTITLEMENTS="$ROOT/Alakeya.entitlements"
+
+if [ -n "$IDENTITY" ]; then
+    echo "▶ Signing with identity: $IDENTITY"
+    codesign --force --deep --options runtime \
+        --entitlements "$ENTITLEMENTS" \
+        --identifier "com.selkorin.alakeya" \
+        --sign "$IDENTITY" "$APP"
+    codesign --verify --deep "$APP" && echo "  ✓ Signature valid"
+else
+    echo "▶ Signing ad-hoc (no CODESIGN_IDENTITY set)"
+    codesign --force --deep \
+        --entitlements "$ENTITLEMENTS" \
+        --identifier "com.selkorin.alakeya" \
+        --sign - "$APP"
+    echo "  ⚠ Ad-hoc signature: macOS привяжет разрешения к ЭТОЙ сборке."
+    echo "  ⚠ После каждого обновления Accessibility/Запись экрана слетят —"
+    echo "  ⚠ сбросьте их в Alakeya → Настройки → Разрешения и выдайте заново,"
+    echo "  ⚠ либо задайте CODESIGN_IDENTITY для стабильной подписи:"
+    echo "  ⚠   CODESIGN_IDENTITY='Developer ID Application: ...' $0"
+fi
+
 VERSION=$(defaults read "$APP/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "?.?.?")
 echo "✓ $APP (v$VERSION)"

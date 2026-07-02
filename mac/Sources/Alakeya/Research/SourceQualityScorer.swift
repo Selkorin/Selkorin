@@ -23,6 +23,16 @@ enum SourceQualityScorer {
         "gov.ru", "kremlin.ru", "rosstat.gov.ru", "minfin.gov.ru",
         "who.int", "un.org", "wikipedia.org",
     ]
+    private static let academicDomains: Set<String> = [
+        "scholar.google.com", "cyberleninka.ru", "elibrary.ru",
+        "arxiv.org", "pubmed.ncbi.nlm.nih.gov", "ncbi.nlm.nih.gov",
+        "semanticscholar.org", "nature.com", "science.org",
+        "sciencedirect.com", "link.springer.com", "springer.com",
+        "jstor.org", "ieee.org", "ieeexplore.ieee.org", "dl.acm.org",
+        "wiley.com", "onlinelibrary.wiley.com", "tandfonline.com",
+        "mdpi.com", "plos.org", "frontiersin.org", "researchgate.net",
+        "dissercat.com", "istina.msu.ru",
+    ]
     private static let reviewPlatforms: Set<String> = [
         "tripadvisor.com", "tripadvisor.ru", "booking.com",
         "ostrovok.ru", "101hotels.com", "votpusk.ru",
@@ -60,6 +70,10 @@ enum SourceQualityScorer {
         // Official / authoritative
         if officialDomains.contains(domain) || domain.hasSuffix(".gov.ru") {
             score += 30; reasons.append("официальный источник")
+        }
+        // Peer-reviewed / scholarly (highest tier for research tasks)
+        if academicDomains.contains(domain) || domain.hasSuffix(".edu") || domain.hasSuffix(".ac.uk") {
+            score += 35; reasons.append("научный рецензируемый источник")
         }
         // Review platforms
         if reviewPlatforms.contains(domain) {

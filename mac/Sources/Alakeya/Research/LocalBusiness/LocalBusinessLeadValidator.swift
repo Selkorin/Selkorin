@@ -91,6 +91,11 @@ enum LocalBusinessLeadValidator {
     static func validate(_ lead: LocalBusinessLead) -> LocalBusinessLead {
         var out = lead
 
+        // Clean email
+        if !out.email.isEmpty && !isValidEmail(out.email) {
+            out.email = ""
+        }
+
         // Clean phone
         if !isValidPhone(out.phone) {
             let wasPhone = out.phone
@@ -135,12 +140,21 @@ enum LocalBusinessLeadValidator {
         }
     }
 
+    // MARK: - Email
+
+    static func isValidEmail(_ raw: String) -> Bool {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !s.isEmpty, s.count <= 254 else { return false }
+        return s.range(of: #"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$"#,
+                       options: .regularExpression) != nil
+    }
+
     static func isActionable(_ lead: LocalBusinessLead, requirePhone: Bool) -> Bool {
         guard hasUsableName(lead.name) else { return false }
         if requirePhone {
             return isValidPhone(lead.phone)
         }
-        return !lead.phone.isEmpty || !lead.address.isEmpty || !lead.website.isEmpty
+        return !lead.phone.isEmpty || !lead.email.isEmpty || !lead.address.isEmpty || !lead.website.isEmpty
     }
 
     // MARK: - Deduplication key

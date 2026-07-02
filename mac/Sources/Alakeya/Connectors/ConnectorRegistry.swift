@@ -54,6 +54,27 @@ final class ConnectorRegistry: ObservableObject {
                 : "Вставьте API key для \(connector.title)."
         ) else { return }
         auth.saveToken(token, for: connector.id)
+
+        // Search APIs need one extra non-secret identifier next to the key.
+        if connector.id == "google_search" {
+            if let cx = Self.promptSecret(
+                title: "Google Search Engine ID",
+                message: "Вставьте Search Engine ID (cx) из programmablesearchengine.google.com."
+            ), !cx.isEmpty {
+                UserDefaults.standard.set(cx.trimmingCharacters(in: .whitespacesAndNewlines),
+                                          forKey: "alakeya.google_search.cx")
+            }
+        }
+        if connector.id == "yandex_search" {
+            if let folder = Self.promptSecret(
+                title: "Yandex Cloud Folder ID",
+                message: "Вставьте folder id каталога Yandex Cloud, в котором включён Search API."
+            ), !folder.isEmpty {
+                UserDefaults.standard.set(folder.trimmingCharacters(in: .whitespacesAndNewlines),
+                                          forKey: "alakeya.yandex_search.folder")
+            }
+        }
+
         setConnected(
             connectorID: connector.id,
             connectedEmail: connector.id == "telegram" ? "Bot API" : "API key"
@@ -290,6 +311,27 @@ final class ConnectorRegistry: ObservableObject {
                     "spreadsheet_clean_data","spreadsheet_append_rows","spreadsheet_export_csv",
                     "spreadsheet_export_xlsx","spreadsheet_create_client_leads_table",
                 ],
+                isEnabled: true
+            ),
+            // ── Search APIs (лид-парсер и исследования) ─────────
+            Connector(
+                id: "google_search", title: "Google Поиск (API)",
+                description: "Google Custom Search API: поиск лидов и исследований без капчи. Нужны API key и Search Engine ID (cx) — cx сохраняется отдельно.",
+                category: .custom, iconName: "magnifyingglass", authType: .apiKey,
+                permissions: [
+                    .init(id: "google_search.query", title: "Поисковые запросы", description: "Чтение результатов поиска Google.", oauthScope: "", risk: .low, isRequired: true),
+                ],
+                availableTools: ["search_internet", "find_business_leads"],
+                isEnabled: true
+            ),
+            Connector(
+                id: "yandex_search", title: "Яндекс Поиск (API)",
+                description: "Yandex Search API (XML): официальный поиск Яндекса для парсера лидов. Нужны API key и folder id из Yandex Cloud.",
+                category: .custom, iconName: "magnifyingglass.circle", authType: .apiKey,
+                permissions: [
+                    .init(id: "yandex_search.query", title: "Поисковые запросы", description: "Чтение результатов поиска Яндекса.", oauthScope: "", risk: .low, isRequired: true),
+                ],
+                availableTools: ["search_internet", "find_business_leads"],
                 isEnabled: true
             ),
             // ── Custom API ──────────────────────────────────────
