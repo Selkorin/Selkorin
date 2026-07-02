@@ -314,7 +314,12 @@ Format as a professional competitive analysis report.
     action: string;
     priority: 'high' | 'medium' | 'low';
   }> {
-    const recommendations = [];
+    const recommendations: Array<{
+      title: string;
+      description: string;
+      action: string;
+      priority: 'high' | 'medium' | 'low';
+    }> = [];
 
     // High priority recommendations
     if (contentAnalysis.topContentTypes.includes('video')) {

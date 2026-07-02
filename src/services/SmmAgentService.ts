@@ -19,7 +19,11 @@ export class SmmAgentService {
     this.projectId = projectId;
 
     const agentRepo = AppDataSource.getRepository(SocialAgent);
-    this.agent = await agentRepo.findOneBy({ id: agentId });
+    const agent = await agentRepo.findOneBy({ id: agentId });
+    if (!agent) {
+      throw new Error(`Agent not found: ${agentId}`);
+    }
+    this.agent = agent;
 
     await this.loadBrandKnowledge();
   }
@@ -79,6 +83,9 @@ export class SmmAgentService {
 
     const contentPlanRepo = AppDataSource.getRepository(ContentPlan);
     const plan = await contentPlanRepo.findOneBy({ id: contentPlanId });
+    if (!plan) {
+      throw new Error(`Content plan not found: ${contentPlanId}`);
+    }
 
     const items: ContentItem[] = [];
     const contentItemRepo = AppDataSource.getRepository(ContentItem);
@@ -137,6 +144,9 @@ export class SmmAgentService {
   async approveContent(contentItemId: string): Promise<ContentItem> {
     const contentItemRepo = AppDataSource.getRepository(ContentItem);
     const item = await contentItemRepo.findOneBy({ id: contentItemId });
+    if (!item) {
+      throw new Error(`Content item not found: ${contentItemId}`);
+    }
 
     item.approvalStatus = 'approved';
     item.status = 'approved';
@@ -146,7 +156,10 @@ export class SmmAgentService {
 
   async publishContent(contentItemId: string): Promise<ContentItem> {
     const contentItemRepo = AppDataSource.getRepository(ContentItem);
-    const item = await contentItemRepo.findOneBy({ id: contentItemId });
+    let item = await contentItemRepo.findOneBy({ id: contentItemId });
+    if (!item) {
+      throw new Error(`Content item not found: ${contentItemId}`);
+    }
 
     item.status = 'publishing';
     item = await contentItemRepo.save(item);

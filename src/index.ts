@@ -12,6 +12,7 @@ import { CompetitorAnalysisController } from './controllers/CompetitorAnalysisCo
 import { GoogleDriveController } from './controllers/GoogleDriveController';
 import { DashboardController } from './controllers/DashboardController';
 import { APIController } from './controllers/APIController';
+import { LeadController } from './controllers/LeadController';
 import { SchedulerService } from './services/SchedulerService';
 import { SeedDataService } from './services/SeedDataService';
 
@@ -61,6 +62,7 @@ const competitorController = new CompetitorAnalysisController();
 const googleDriveController = new GoogleDriveController();
 const dashboardController = new DashboardController();
 const apiController = new APIController();
+const leadController = new LeadController();
 
 // Health & Demo
 app.get('/health', (req, res) => {
@@ -244,9 +246,38 @@ app.delete('/api/content/:id', (req, res) =>
 app.get('/api/socials', (req, res) =>
   apiController.listSocialAccounts(req, res)
 );
+app.post('/api/socials', (req, res) =>
+  apiController.createSocialAccount(req, res)
+);
 app.get('/api/socials/:id', (req, res) =>
   apiController.getSocialAccount(req, res)
 );
+app.delete('/api/socials/:id', (req, res) =>
+  apiController.deleteSocialAccount(req, res)
+);
+
+// Settings API (preferences + encrypted API keys / permissions)
+app.get('/api/settings', (req, res) => apiController.getSettings(req, res));
+app.put('/api/settings', (req, res) => apiController.updateSettings(req, res));
+
+// Competitor Analysis API (frontend-facing, /api prefix)
+app.post('/api/analyze/competitor', (req, res) =>
+  competitorController.analyzeCompetitor(req, res)
+);
+app.get('/api/analysis/:analysisId', (req, res) =>
+  competitorController.getAnalysis(req, res)
+);
+app.get('/api/analyses', (req, res) =>
+  competitorController.getAnalysesByProject(req, res)
+);
+app.post('/api/analysis/:analysisId/send-to-agents', (req, res) =>
+  competitorController.sendRecommendationsToAgents(req, res)
+);
+
+// Leads & Research API (parser)
+app.get('/api/leads/providers', (req, res) => leadController.getProviders(req, res));
+app.post('/api/leads/search', (req, res) => leadController.searchLeads(req, res));
+app.post('/api/research/deep', (req, res) => leadController.deepResearch(req, res));
 
 // Content Plans API
 app.get('/api/plans', (req, res) => apiController.listContentPlans(req, res));

@@ -22,7 +22,7 @@ export interface ContentFile {
 export class GoogleDriveService {
   private oauth2Client: OAuth2Client;
   private drive: any;
-  private contentFolderId: string | null = null;
+  private contentFolderId: string = '';
 
   constructor(config: GoogleDriveConfig) {
     this.oauth2Client = new google.auth.OAuth2(
@@ -74,7 +74,7 @@ export class GoogleDriveService {
     });
 
     if (res.data.files && res.data.files.length > 0) {
-      this.contentFolderId = res.data.files[0].id;
+      this.contentFolderId = res.data.files[0].id ?? '';
       return this.contentFolderId;
     }
 
@@ -87,7 +87,7 @@ export class GoogleDriveService {
       fields: 'id',
     });
 
-    this.contentFolderId = folderRes.data.id;
+    this.contentFolderId = folderRes.data.id ?? '';
     return this.contentFolderId;
   }
 

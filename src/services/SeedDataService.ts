@@ -46,33 +46,37 @@ export class SeedDataService {
     const accounts = [
       {
         id: 'account-instagram-demo',
-        platform: 'instagram',
+        userId: 'demo-user',
+        projectId: 'demo',
+        platform: 'instagram' as const,
         accountName: '@demo_brand_official',
-        accountEmail: 'instagram@demo.com',
-        accessToken: 'encrypted_token_ig_demo',
-        refreshToken: 'refresh_token_ig_demo',
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         status: 'connected' as const,
+        authType: 'oauth' as const,
+        accessTokenEncrypted: 'encrypted_token_ig_demo',
+        refreshTokenEncrypted: 'refresh_token_ig_demo',
+        tokenExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
       {
         id: 'account-telegram-demo',
-        platform: 'telegram',
+        userId: 'demo-user',
+        projectId: 'demo',
+        platform: 'telegram' as const,
         accountName: 'Demo Brand Channel',
-        accountEmail: 'telegram@demo.com',
-        accessToken: 'encrypted_token_tg_demo',
-        refreshToken: null,
-        expiresAt: null,
         status: 'connected' as const,
+        authType: 'bot_token' as const,
+        accessTokenEncrypted: 'encrypted_token_tg_demo',
       },
       {
         id: 'account-tiktok-demo',
-        platform: 'tiktok',
+        userId: 'demo-user',
+        projectId: 'demo',
+        platform: 'tiktok' as const,
         accountName: '@demobrand',
-        accountEmail: 'tiktok@demo.com',
-        accessToken: 'encrypted_token_tk_demo',
-        refreshToken: 'refresh_token_tk_demo',
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         status: 'connected' as const,
+        authType: 'oauth' as const,
+        accessTokenEncrypted: 'encrypted_token_tk_demo',
+        refreshTokenEncrypted: 'refresh_token_tk_demo',
+        tokenExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     ];
 
@@ -103,19 +107,21 @@ export class SeedDataService {
     const plans = [
       {
         id: 'plan-current-week',
+        socialAccountId: 'account-instagram-demo',
+        createdByAgentId: 'agent-instagram',
         title: 'Current Week Content Plan',
-        description: 'Weekly content calendar for May 27 - June 2, 2024',
         periodStart: weekStart,
         periodEnd: weekEnd,
         status: 'active' as const,
       },
       {
         id: 'plan-next-week',
+        socialAccountId: 'account-instagram-demo',
+        createdByAgentId: 'agent-instagram',
         title: 'Next Week Content Plan',
-        description: 'Weekly content calendar for June 3 - June 9, 2024',
         periodStart: new Date(weekEnd.getTime() + 24 * 60 * 60 * 1000),
         periodEnd: new Date(weekEnd.getTime() + 13 * 24 * 60 * 60 * 1000),
-        status: 'planning' as const,
+        status: 'draft' as const,
       },
     ];
 
@@ -158,7 +164,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 9 * 60 * 60 * 1000),
         status: 'approved' as const,
         approvalStatus: 'approved' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -172,7 +177,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 12 * 60 * 60 * 1000),
         status: 'approved' as const,
         approvalStatus: 'approved' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -187,7 +191,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 18 * 60 * 60 * 1000),
         status: 'scheduled' as const,
         approvalStatus: 'approved' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -200,7 +203,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 1 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000),
         status: 'draft' as const,
         approvalStatus: 'pending' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -214,7 +216,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 2 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
         status: 'needs_review' as const,
         approvalStatus: 'pending' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -228,7 +229,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 3 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000),
         status: 'approved' as const,
         approvalStatus: 'approved' as const,
-        googleDriveFileId: null,
       },
       {
         contentPlanId: plan.id,
@@ -242,7 +242,6 @@ export class SeedDataService {
         publishAt: new Date(plan.periodStart.getTime() + 4 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
         status: 'approved' as const,
         approvalStatus: 'approved' as const,
-        googleDriveFileId: null,
       },
     ];
 
@@ -281,30 +280,42 @@ export class SeedDataService {
       {
         id: 'agent-instagram',
         socialAccountId: instagramAccount.id,
-        name: 'Instagram Brand Specialist',
-        tone: 'engaging, trendy, inspiring',
-        personality: 'Creative and visual storyteller',
-        brandRules:
-          'Focus on brand values: innovation, community, sustainability. Use trending sounds and formats.',
-        targetAudience: 'Gen Z and young millennials, tech-savvy, value-driven',
-        contentStyle: 'Mix of educational, entertaining, and promotional content',
-        aiProvider: 'claude' as const,
-        model: 'claude-opus-4-7',
-        status: 'active' as const,
+        agentName: 'Instagram Brand Specialist',
+        agentRole: 'Creative and visual storyteller',
+        toneOfVoice: 'engaging, trendy, inspiring',
+        brandRules: {
+          targetAudience: 'Gen Z and young millennials, tech-savvy, value-driven',
+          style: 'modern',
+          offers: [],
+          rules:
+            'Focus on brand values: innovation, community, sustainability. Use trending sounds and formats.',
+        },
+        contentRules: {
+          style: 'Mix of educational, entertaining, and promotional content',
+        },
+        autoPublishEnabled: false,
+        approvalRequired: true,
+        aiProvider: 'claude',
       },
       {
         id: 'agent-telegram',
         socialAccountId: telegramAccount.id,
-        name: 'Telegram Community Manager',
-        tone: 'professional, informative, accessible',
-        personality: 'Knowledgeable guide and community facilitator',
-        brandRules:
-          'Deliver value-focused content. Maintain professional tone. Foster community engagement.',
-        targetAudience: 'Professional audience, business-minded, information seekers',
-        contentStyle: 'News, updates, tutorials, and community discussions',
-        aiProvider: 'claude' as const,
-        model: 'claude-opus-4-7',
-        status: 'active' as const,
+        agentName: 'Telegram Community Manager',
+        agentRole: 'Knowledgeable guide and community facilitator',
+        toneOfVoice: 'professional, informative, accessible',
+        brandRules: {
+          targetAudience: 'Professional audience, business-minded, information seekers',
+          style: 'clean',
+          offers: [],
+          rules:
+            'Deliver value-focused content. Maintain professional tone. Foster community engagement.',
+        },
+        contentRules: {
+          style: 'News, updates, tutorials, and community discussions',
+        },
+        autoPublishEnabled: false,
+        approvalRequired: true,
+        aiProvider: 'claude',
       },
     ];
 
@@ -462,7 +473,7 @@ RECOMMENDATIONS FOR COMPETITIVE ADVANTAGE:
         contentItemId: 'item-1',
         platform: 'instagram' as const,
         platformPostId: '123456789_987654321',
-        status: 'published' as const,
+        status: 'success' as const,
         publishedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
         metrics: {
           likes: 1234,
@@ -478,7 +489,7 @@ RECOMMENDATIONS FOR COMPETITIVE ADVANTAGE:
         contentItemId: 'item-2',
         platform: 'instagram' as const,
         platformPostId: '234567890_098765432',
-        status: 'published' as const,
+        status: 'success' as const,
         publishedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
         metrics: {
           likes: 2156,

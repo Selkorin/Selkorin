@@ -16,25 +16,28 @@
     "node": "20.x"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "typeorm": "^0.3.16",
-    "pg": "^8.10.0",
-    "dotenv": "^16.3.1",
+    "@anthropic-ai/sdk": "^0.110.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.5.0",
-    "anthropic": "^0.11.0",
-    "openai": "^4.20.0",
-    "google-generative-ai": "^0.3.0",
-    "jsonwebtoken": "^9.1.0",
     "bcryptjs": "^2.4.3",
-    "multer": "^1.4.5-lts.1",
     "csv-parse": "^5.5.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "googleapis": "^118.0.0",
-    "sqlite3": "^5.1.6"
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.20.0",
+    "pg": "^8.10.0",
+    "sqlite3": "^5.1.6",
+    "typeorm": "^0.3.16"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
-    "ts-node": "^10.9.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
     "@types/node": "^20.5.0",
-    "@types/express": "^4.17.17"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }

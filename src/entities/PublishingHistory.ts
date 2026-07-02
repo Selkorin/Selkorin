@@ -32,6 +32,9 @@ export class PublishingHistory {
     comments?: number;
     shares?: number;
     views?: number;
+    reach?: number;
+    saves?: number;
+    impressions?: number;
     engagementRate?: number;
   };
 

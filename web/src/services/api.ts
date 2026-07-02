@@ -37,6 +37,32 @@ export const content = {
 export const socialAccounts = {
   list: () => apiClient.get('/socials'),
   get: (id: string) => apiClient.get(`/socials/${id}`),
+  create: (data: { platform: string; accountName: string; token?: string }) =>
+    apiClient.post('/socials', data),
+  disconnect: (id: string) => apiClient.delete(`/socials/${id}`),
+};
+
+// Settings endpoints (preferences + API keys / permissions)
+export const settings = {
+  get: () => apiClient.get('/settings'),
+  update: (data: { settings?: Record<string, any>; secrets?: Record<string, string> }) =>
+    apiClient.put('/settings', data),
+};
+
+// Leads & Research (parser)
+export const leads = {
+  providers: () => apiClient.get('/leads/providers'),
+  search: (data: {
+    query: string;
+    location?: string;
+    count?: number;
+    provider?: 'google' | 'yandex' | 'auto';
+  }) => apiClient.post('/leads/search', data),
+  deepResearch: (data: {
+    topic: string;
+    profession?: string;
+    depth?: 'overview' | 'graduate' | 'phd';
+  }) => apiClient.post('/research/deep', data),
 };
 
 // Content plans endpoints
