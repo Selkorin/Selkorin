@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="640" fill="#fafafa"/>
+  <text x="500" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#263238">Мини-установка пиролиза пластика — принципиальная схема</text>
+
+  <!-- ground -->
+  <line x1="20" y1="560" x2="980" y2="560" stroke="#8d6e63" stroke-width="3"/>
+
+  <!-- ============ REACTOR ============ -->
+  <!-- insulation -->
+  <rect x="88" y="248" width="124" height="292" rx="14" fill="none" stroke="#bdbdbd" stroke-width="10" stroke-dasharray="4 4"/>
+  <!-- vessel -->
+  <rect x="100" y="260" width="100" height="270" rx="12" fill="#eceff1" stroke="#37474f" stroke-width="3"/>
+  <!-- plastic load -->
+  <rect x="104" y="420" width="92" height="106" rx="8" fill="#c8e6c9" stroke="none"/>
+  <text x="150" y="478" text-anchor="middle" font-size="12" fill="#2e7d32">пластик</text>
+  <text x="150" y="493" text-anchor="middle" font-size="12" fill="#2e7d32">PE / PP</text>
+  <!-- flange -->
+  <rect x="88" y="252" width="124" height="12" fill="#90a4ae" stroke="#37474f" stroke-width="2"/>
+  <circle cx="96" cy="258" r="3" fill="#37474f"/><circle cx="204" cy="258" r="3" fill="#37474f"/>
+  <text x="150" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#263238">РЕАКТОР</text>
+  <text x="150" y="338" text-anchor="middle" font-size="12" fill="#455064">400–450 °C</text>
+  <text x="150" y="354" text-anchor="middle" font-size="12" fill="#455064">без O₂</text>
+
+  <!-- band heaters -->
+  <rect x="92" y="440" width="8" height="80" fill="#ef9a9a" stroke="#c62828"/>
+  <rect x="200" y="440" width="8" height="80" fill="#ef9a9a" stroke="#c62828"/>
+  <text x="150" y="552" text-anchor="middle" font-size="12" fill="#c62828">нагреватели 2×1,5 кВт (или газовая горелка)</text>
+
+  <!-- thermowell TC1 -->
+  <line x1="200" y1="400" x2="150" y2="400" stroke="#37474f" stroke-width="4"/>
+  <circle cx="212" cy="400" r="9" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="212" y="404" text-anchor="middle" font-size="9" font-weight="bold">TC1</text>
+
+  <!-- purge line -->
+  <line x1="100" y1="285" x2="45" y2="285" stroke="#37474f" stroke-width="3"/>
+  <rect x="52" y="278" width="14" height="14" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="59" y="289" text-anchor="middle" font-size="9">V1</text>
+  <text x="45" y="270" text-anchor="middle" font-size="11" fill="#455064">CO₂ / N₂</text>
+  <text x="45" y="305" text-anchor="middle" font-size="11" fill="#455064">продувка</text>
+
+  <!-- pressure sensor on purge tee -->
+  <line x1="80" y1="285" x2="80" y2="245" stroke="#37474f" stroke-width="2"/>
+  <circle cx="80" cy="233" r="11" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="80" y="237" text-anchor="middle" font-size="9" font-weight="bold">P1</text>
+
+  <!-- PSV -->
+  <line x1="130" y1="252" x2="130" y2="215" stroke="#37474f" stroke-width="3"/>
+  <path d="M120,215 h20 l-10,-18 z" fill="#ffcdd2" stroke="#c62828" stroke-width="2"/>
+  <line x1="130" y1="197" x2="130" y2="180" stroke="#c62828" stroke-width="2" marker-end="url(#arrowRed)"/>
+  <text x="128" y="172" text-anchor="end" font-size="11" fill="#c62828" font-weight="bold">ПК 2 бар (обязателен)</text>
+
+  <!-- ============ VAPOR LINE + reflux riser ============ -->
+  <line x1="175" y1="252" x2="175" y2="130" stroke="#37474f" stroke-width="5"/>
+  <circle cx="196" cy="165" r="9" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="196" y="169" text-anchor="middle" font-size="9" font-weight="bold">TC2</text>
+  <line x1="187" y1="165" x2="180" y2="165" stroke="#37474f" stroke-width="2"/>
+  <text x="168" y="200" text-anchor="end" font-size="11" fill="#455064">дефлегматор-стояк</text>
+  <text x="168" y="214" text-anchor="end" font-size="11" fill="#455064">300–400 мм</text>
+  <path d="M175,130 h175" stroke="#37474f" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+  <text x="265" y="118" text-anchor="middle" font-size="12" fill="#455064">пары углеводородов</text>
+
+  <!-- ============ CONDENSER (inclined) ============ -->
+  <g transform="rotate(14 360 130)">
+    <rect x="360" y="112" width="240" height="36" rx="8" fill="#bbdefb" stroke="#1565c0" stroke-width="2"/>
+    <rect x="345" y="124" width="270" height="12" fill="#eceff1" stroke="#37474f" stroke-width="2.5"/>
+    <text x="480" y="106" text-anchor="middle" font-size="13" font-weight="bold" fill="#1565c0">КОНДЕНСАТОР (противоток)</text>
+    <!-- water in -->
+    <line x1="590" y1="170" x2="590" y2="148" stroke="#1976d2" stroke-width="3" marker-end="url(#arrowBlue)"/>
+    <text x="590" y="185" text-anchor="middle" font-size="11" fill="#1976d2">вода вход</text>
+    <!-- water out -->
+    <line x1="372" y1="112" x2="372" y2="86" stroke="#1976d2" stroke-width="3" marker-end="url(#arrowBlue)"/>
+    <text x="372" y="78" text-anchor="middle" font-size="11" fill="#1976d2">вода выход</text>
+  </g>
+
+  <!-- condensate drop pipe -->
+  <path d="M612 195 L640 205 L640 300" stroke="#37474f" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ============ RECEIVER ============ -->
+  <rect x="590" y="305" width="110" height="120" rx="10" fill="#eceff1" stroke="#37474f" stroke-width="3"/>
+  <rect x="594" y="370" width="102" height="51" rx="8" fill="#ffe082"/>
+  <text x="645" y="345" text-anchor="middle" font-size="13" font-weight="bold" fill="#263238">ПРИЁМНИК</text>
+  <text x="645" y="400" text-anchor="middle" font-size="11" fill="#795548">пироконденсат</text>
+  <!-- drain valve -->
+  <line x1="645" y1="425" x2="645" y2="455" stroke="#37474f" stroke-width="3"/>
+  <rect x="638" y="455" width="14" height="14" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="645" y="466" text-anchor="middle" font-size="9">V2</text>
+  <text x="645" y="488" text-anchor="middle" font-size="11" fill="#455064">слив продукта</text>
+
+  <!-- gas line to bubbler -->
+  <path d="M690 315 L760 315 L760 350" stroke="#37474f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="726" y="303" text-anchor="middle" font-size="11" fill="#455064">остаточный газ</text>
+
+  <!-- ============ BUBBLER ============ -->
+  <rect x="730" y="352" width="60" height="80" rx="6" fill="#e1f5fe" stroke="#37474f" stroke-width="2.5"/>
+  <rect x="733" y="385" width="54" height="44" fill="#81d4fa"/>
+  <line x1="760" y1="352" x2="760" y2="415" stroke="#37474f" stroke-width="3"/>
+  <circle cx="753" cy="398" r="2.5" fill="#fff"/><circle cx="766" cy="406" r="2.5" fill="#fff"/><circle cx="759" cy="390" r="2.5" fill="#fff"/>
+  <text x="760" y="448" text-anchor="middle" font-size="12" font-weight="bold" fill="#263238">ГИДРОЗАТВОР</text>
+  <text x="760" y="463" text-anchor="middle" font-size="10" fill="#455064">огнепреграда</text>
+
+  <!-- gas out to flare -->
+  <path d="M782 360 L870 360 L870 250" stroke="#37474f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <!-- flare -->
+  <rect x="860" y="200" width="20" height="50" fill="#90a4ae" stroke="#37474f" stroke-width="2"/>
+  <path d="M870,196 c-8,-14 4,-18 0,-30 c10,10 14,20 6,30 z" fill="#ff9800" stroke="#e65100"/>
+  <text x="870" y="272" text-anchor="middle" font-size="12" font-weight="bold" fill="#263238">ФАКЕЛ</text>
+
+  <!-- gas return to burner -->
+  <path d="M870 420 L870 505 L300 505 L300 530" stroke="#37474f" stroke-width="3" fill="none" stroke-dasharray="8 5" marker-end="url(#arrow)"/>
+  <line x1="870" y1="360" x2="870" y2="420" stroke="#37474f" stroke-width="3" stroke-dasharray="8 5"/>
+  <rect x="863" y="435" width="14" height="14" fill="#fff" stroke="#37474f" stroke-width="2"/>
+  <text x="870" y="446" text-anchor="middle" font-size="9">V3</text>
+  <text x="600" y="522" text-anchor="middle" font-size="11" fill="#455064">возврат газа в горелку (самоподдержка процесса)</text>
+
+  <!-- ============ CONTROL BOX ============ -->
+  <rect x="330" y="330" width="200" height="120" rx="10" fill="#ede7f6" stroke="#4527a0" stroke-width="2.5"/>
+  <text x="430" y="355" text-anchor="middle" font-size="13" font-weight="bold" fill="#4527a0">КОНТРОЛЛЕР</text>
+  <text x="430" y="374" text-anchor="middle" font-size="11" fill="#4527a0">ESP32 · PID · SSR · контактор</text>
+  <text x="430" y="392" text-anchor="middle" font-size="11" fill="#4527a0">блокировки: T&gt;480°C, P&gt;1,5 бар,</text>
+  <text x="430" y="408" text-anchor="middle" font-size="11" fill="#4527a0">обрыв ТП, утечка газа → СТОП</text>
+  <text x="430" y="430" text-anchor="middle" font-size="11" fill="#6a1b9a">телеметрия → ИИ-анализ прогонов</text>
+  <circle cx="518" cy="342" r="7" fill="#d32f2f" stroke="#7f0000" stroke-width="2"/>
+  <text x="518" y="330" text-anchor="middle" font-size="9" fill="#7f0000">СТОП</text>
+
+  <!-- signal lines (dashed purple) -->
+  <path d="M330 400 L221 400" stroke="#7e57c2" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <path d="M330 370 L205 165" stroke="#7e57c2" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <path d="M330 355 L80 244" stroke="#7e57c2" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <path d="M370 450 L240 480" stroke="#7e57c2" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <circle cx="240" cy="483" r="9" fill="#fff" stroke="#7e57c2" stroke-width="2"/>
+  <text x="240" y="487" text-anchor="middle" font-size="8" font-weight="bold" fill="#4527a0">GS</text>
+  <text x="240" y="503" text-anchor="middle" font-size="10" fill="#4527a0">MQ-2 у земли</text>
+  <path d="M330 435 L208 470 L150 528" fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <text x="285" y="462" font-size="10" fill="#c62828">питание ТЭН</text>
+
+  <!-- ============ LEGEND ============ -->
+  <rect x="30" y="580" width="940" height="46" rx="8" fill="#eceff1" stroke="#b0bec5"/>
+  <text x="45" y="598" font-size="11" fill="#263238"><tspan font-weight="bold">TC1/TC2</tspan> — термопары K · <tspan font-weight="bold">P1</tspan> — датчик давления · <tspan font-weight="bold">GS</tspan> — датчик горючих газов · <tspan font-weight="bold">ПК</tspan> — предохранительный клапан · <tspan font-weight="bold">V1–V3</tspan> — краны</text>
+  <text x="45" y="616" font-size="11" fill="#263238">Сплошные линии — продуктовый тракт · пунктир серый — газовый возврат · пунктир фиолетовый — сигналы КИП · синий — вода охлаждения</text>
+</svg>
