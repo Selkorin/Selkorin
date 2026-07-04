@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Selkorin — Лидогенерация</title>
+  <link rel="preconnect" href="/" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">🎯</div>
+        <div>
+          <div class="brand-name">Selkorin</div>
+          <div class="brand-sub">Lead Engine</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <div class="mode-pill" id="mode-pill"><span class="dot demo"></span> демо-режим</div>
+        <div>© Selkorin Lead Engine</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="page-title" id="page-title">Обзор</div>
+          <div class="page-sub" id="page-sub">Панель лидогенерации</div>
+        </div>
+        <div class="topbar-right" id="topbar-right"></div>
+      </header>
+      <div class="content" id="app"></div>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toasts"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

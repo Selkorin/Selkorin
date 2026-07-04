@@ -1,3 +1,20 @@
+# 🎯 Selkorin Lead Engine
+
+> **Основной продукт этой ветки — приложение для лидогенерации, парсинга и рассылок.**
+> Опишите словами, кого искать («Найди мне клиентов, кому нужен сайт»), и движок
+> соберёт свежие заявки из Telegram-чатов, Яндекс-поиска и Яндекс.Карт (бизнесы
+> без сайта), оценит каждый лид и предложит первое сообщение. Плюс модуль
+> Telegram-рассылок: массовые сообщения, реакции, лайки, кружки, просмотры.
+>
+> 👉 **Код и инструкция:** [`leadgen/`](./leadgen/) · запуск: `cd leadgen && ./run.sh` → http://localhost:8000
+>
+> Стек: Python + FastAPI + Telethon + Claude + SQLite, фронтенд — SPA без сборки.
+> Работает «из коробки» в demo-режиме без ключей.
+
+---
+
+<sub>Ниже — документация к прежнему проекту репозитория (AI SMM система на Node/TS), оставлена для истории.</sub>
+
 # 🧠 WAI Social Brain - Complete AI SMM System
 
 **AI-powered Social Media Management System** with intelligent content creation, scheduling, analytics, and competitor analysis.
