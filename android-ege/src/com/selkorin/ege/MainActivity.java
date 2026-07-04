@@ -159,7 +159,7 @@ public class MainActivity extends Activity {
         LinearLayout mix = card();
         mix.setLayoutParams(lp(18));
         mix.addView(text("🎲 Случайный тест", 19, C_TEXT, true));
-        mix.addView(text("15 вопросов из всех предметов вперемешку.", 13, C_MUTED, false), lp(4));
+        mix.addView(text("20 вопросов из всех предметов вперемешку.", 13, C_MUTED, false), lp(4));
         Button mixBtn = filledButton("Начать смешанный тест", C_PRIMARY, new View.OnClickListener() {
             public void onClick(View v) { startMixedQuiz(); }
         });
@@ -239,7 +239,7 @@ public class MainActivity extends Activity {
     private void startMixedQuiz() {
         List<Question> all = Bank.allQuestions();
         Collections.shuffle(all);
-        int n = Math.min(15, all.size());
+        int n = Math.min(20, all.size());
         buildQuiz(all.subList(0, n), "🎲  Смешанный тест");
     }
 

@@ -33,9 +33,10 @@ javac -source 8 -target 8 -encoding UTF-8 -nowarn \
 echo "==> Дексирование (dx / dalvik-exchange)"
 dalvik-exchange --dex --output="$BUILD/classes.dex" "$BUILD/obj"
 
-echo "==> Упаковка ресурсов в APK"
+echo "==> Упаковка ресурсов в APK (resources.arsc без сжатия)"
+# -0 arsc: хранить resources.arsc без сжатия — требование Android 11+ при targetSdk>=30
 aapt package -f -M AndroidManifest.xml -S res -I "$ANDROID_JAR" \
-      -F "$BUILD/app.unaligned.apk"
+      -0 arsc -F "$BUILD/app.unaligned.apk"
 
 echo "==> Добавление classes.dex"
 ( cd "$BUILD" && aapt add app.unaligned.apk classes.dex >/dev/null )
