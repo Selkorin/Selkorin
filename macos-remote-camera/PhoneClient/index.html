@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SelkorinCam — Phone Streamer</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, system-ui, sans-serif;
+    background: #0b0d10; color: #e8eaed;
+  }
+  header { padding: 14px 16px; background: #14181d; border-bottom: 1px solid #232a31; }
+  header h1 { margin: 0; font-size: 17px; }
+  header p { margin: 4px 0 0; font-size: 12px; color: #9aa4ad; }
+  main { padding: 16px; max-width: 640px; margin: 0 auto; }
+  video, canvas { width: 100%; border-radius: 10px; background: #000; display: block; }
+  canvas { display: none; }
+  label { display: block; font-size: 12px; color: #9aa4ad; margin: 12px 0 4px; }
+  input, select, button {
+    width: 100%; padding: 11px 12px; border-radius: 9px; font-size: 15px;
+    border: 1px solid #2a323a; background: #171c22; color: #e8eaed;
+  }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  button { border: none; font-weight: 600; margin-top: 14px; cursor: pointer; }
+  button.primary { background: #2f6df6; color: #fff; }
+  button.stop { background: #b3261e; color: #fff; }
+  button:disabled { opacity: .5; }
+  .stats { display: flex; gap: 16px; margin-top: 12px; font-variant-numeric: tabular-nums; }
+  .stats div span { display: block; font-size: 20px; font-weight: 700; }
+  .stats div small { color: #9aa4ad; font-size: 11px; }
+  .note {
+    margin-top: 16px; padding: 12px; border-radius: 9px; font-size: 12px;
+    background: #1a1408; border: 1px solid #4a3a10; color: #d9c48a;
+  }
+  #status { margin-top: 10px; font-size: 13px; color: #9aa4ad; }
+  code { background: #171c22; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SelkorinCam — Phone Streamer</h1>
+  <p>Streams this phone's camera to your Mac on the same Wi-Fi.</p>
+</header>
+<main>
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="canvas"></canvas>
+
+  <label>Mac target (from the Live tab)</label>
+  <input id="target" type="url" placeholder="http://192.168.1.10:8099" value="http://192.168.1.10:8099">
+
+  <div class="row">
+    <div>
+      <label>Camera</label>
+      <select id="facing">
+        <option value="environment">Back</option>
+        <option value="user">Front</option>
+      </select>
+    </div>
+    <div>
+      <label>FPS</label>
+      <select id="fps">
+        <option>10</option><option selected>15</option><option>20</option><option>24</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Width</label>
+      <select id="width">
+        <option>640</option><option selected>960</option><option>1280</option><option>1920</option>
+      </select>
+    </div>
+    <div>
+      <label>JPEG quality</label>
+      <select id="quality">
+        <option value="0.5">Low</option>
+        <option value="0.7" selected>Medium</option>
+        <option value="0.85">High</option>
+      </select>
+    </div>
+  </div>
+
+  <button id="startBtn" class="primary">Start streaming</button>
+  <button id="stopBtn" class="stop" disabled>Stop</button>
+
+  <div class="stats">
+    <div><span id="sentFps">0</span><small>fps sent</small></div>
+    <div><span id="sentCount">0</span><small>frames</small></div>
+    <div><span id="kbps">0</span><small>KB/s</small></div>
+  </div>
+
+  <div id="status">Idle.</div>
+
+  <div class="note">
+    <b>Heads up about "screen off":</b> mobile browsers pause camera capture when
+    the screen fully locks, so a browser can keep streaming with the screen
+    <i>dimmed / wake-lock held</i>, but not fully powered off. For true
+    screen-off background streaming you need a native app with a foreground
+    camera service (allowed on Android; iOS restricts background camera). This
+    page is the no-install option for lab testing your own phone → your own Mac.
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const video = $('video'), canvas = $('canvas'), ctx = canvas.getContext('2d');
+let stream = null, timer = null, wakeLock = null;
+let sent = 0, bytesWindow = 0, framesWindow = 0, windowStart = 0, inFlight = false;
+
+async function start() {
+  const facing = $('facing').value;
+  const width = parseInt($('width').value, 10);
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing, width: { ideal: width } },
+      audio: false
+    });
+  } catch (e) {
+    $('status').textContent = 'Camera error: ' + e.message +
+      ' (camera needs HTTPS or localhost on most browsers).';
+    return;
+  }
+  video.srcObject = stream;
+  await video.play().catch(() => {});
+
+  try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (_) {}
+
+  const fps = parseInt($('fps').value, 10);
+  const quality = parseFloat($('quality').value);
+  sent = 0; bytesWindow = 0; framesWindow = 0; windowStart = performance.now();
+
+  $('startBtn').disabled = true;
+  $('stopBtn').disabled = false;
+  $('status').textContent = 'Streaming to ' + $('target').value;
+
+  timer = setInterval(() => sendFrame(quality), 1000 / fps);
+}
+
+function sendFrame(quality) {
+  if (inFlight || video.videoWidth === 0) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    inFlight = true;
+    try {
+      const target = $('target').value.replace(/\/+$/, '');
+      await fetch(target + '/frame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: blob
+      });
+      sent++;
+      framesWindow++;
+      bytesWindow += blob.size;
+      updateStats();
+    } catch (e) {
+      $('status').textContent = 'Send failed: ' + e.message;
+    } finally {
+      inFlight = false;
+    }
+  }, 'image/jpeg', quality);
+}
+
+function updateStats() {
+  const now = performance.now();
+  const dt = (now - windowStart) / 1000;
+  if (dt >= 1) {
+    $('sentFps').textContent = (framesWindow / dt).toFixed(0);
+    $('kbps').textContent = (bytesWindow / 1024 / dt).toFixed(0);
+    framesWindow = 0; bytesWindow = 0; windowStart = now;
+  }
+  $('sentCount').textContent = sent;
+}
+
+function stop() {
+  clearInterval(timer); timer = null;
+  stream?.getTracks().forEach(t => t.stop()); stream = null;
+  wakeLock?.release?.(); wakeLock = null;
+  $('startBtn').disabled = false;
+  $('stopBtn').disabled = true;
+  $('status').textContent = 'Stopped.';
+}
+
+$('startBtn').addEventListener('click', start);
+$('stopBtn').addEventListener('click', stop);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && stream && !wakeLock) {
+    navigator.wakeLock?.request('screen').then(w => wakeLock = w).catch(() => {});
+  }
+});
+</script>
+</body>
+</html>
