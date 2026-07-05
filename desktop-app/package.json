@@ -1,0 +1,24 @@
+{
+  "name": "selkorin-vpn",
+  "productName": "Selkorin VPN",
+  "version": "1.0.0",
+  "description": "Selkorin VPN — приватный WireGuard/Reality менеджер (чёрно-белый футуризм)",
+  "main": "src/main/main.js",
+  "author": "Selkorin",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "make-icon": "node build/pack-icns.js",
+    "pack:mac-arm": "electron-packager . \"Selkorin VPN\" --platform=darwin --arch=arm64 --icon=build/icon.icns --out=dist --overwrite --app-bundle-id=com.selkorin.vpn --app-category-type=public.app-category.utilities --prune=true --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/\\.git\"",
+    "pack:mac-x64": "electron-packager . \"Selkorin VPN\" --platform=darwin --arch=x64 --icon=build/icon.icns --out=dist --overwrite --app-bundle-id=com.selkorin.vpn --app-category-type=public.app-category.utilities --prune=true --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/\\.git\"",
+    "dist:mac": "npm run make-icon && npm run pack:mac-arm && npm run pack:mac-x64"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ssh2": "^1.16.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-packager": "^17.1.2"
+  }
+}

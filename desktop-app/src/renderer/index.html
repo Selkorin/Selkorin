@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <title>Selkorin VPN</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Верхняя перетаскиваемая полоса (под traffic lights macOS) -->
+  <header class="titlebar">
+    <div class="titlebar-title">SELKORIN&nbsp;·&nbsp;<span class="dim">VPN CONTROL</span></div>
+    <div class="titlebar-status" id="topStatus"><span class="dot" id="topDot"></span><span id="topStatusText">не подключён</span></div>
+  </header>
+
+  <div class="app">
+    <!-- Сайдбар -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="brand-logo" src="dragon.svg" alt="Selkorin" />
+        <div class="brand-name">SELKORIN</div>
+        <div class="brand-sub">private network</div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="servers"><span class="nav-ico">◈</span>Серверы</button>
+        <button class="nav-item" data-view="devices"><span class="nav-ico">▤</span>Устройства</button>
+        <button class="nav-item" data-view="thismac"><span class="nav-ico">◐</span>Этот Mac</button>
+        <button class="nav-item" data-view="reality"><span class="nav-ico">◇</span>Reality</button>
+        <button class="nav-item" data-view="settings"><span class="nav-ico">⚙</span>Настройки</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="active-profile" id="activeProfile">сервер не выбран</div>
+        <div class="ver" id="appVer">v1.0.0</div>
+      </div>
+    </aside>
+
+    <!-- Контент -->
+    <main class="content" id="content">
+
+      <!-- СЕРВЕРЫ -->
+      <section class="view active" data-view="servers">
+        <div class="view-head">
+          <h1>Серверы</h1>
+          <button class="btn primary" id="addServerBtn">＋ Добавить сервер</button>
+        </div>
+        <p class="hint">Подключение к вашему VPS по SSH. Разверните WireGuard в один клик или управляйте существующим сервером.</p>
+        <div class="cards" id="serverList"></div>
+      </section>
+
+      <!-- УСТРОЙСТВА -->
+      <section class="view" data-view="devices">
+        <div class="view-head">
+          <h1>Устройства</h1>
+          <button class="btn primary" id="addDeviceBtn">＋ Добавить устройство</button>
+        </div>
+        <p class="hint" id="devicesHint">Выберите сервер на вкладке «Серверы».</p>
+        <div class="table-wrap">
+          <table class="tbl" id="devicesTbl">
+            <thead><tr><th></th><th>Имя</th><th>Адрес в VPN</th><th>Последний хендшейк</th><th>Трафик ↓/↑</th><th></th></tr></thead>
+            <tbody id="devicesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ЭТОТ MAC -->
+      <section class="view" data-view="thismac">
+        <div class="view-head"><h1>Этот Mac</h1></div>
+        <div class="banner" id="wgBanner" hidden></div>
+        <p class="hint">Подключите этот компьютер к VPN. Приложение поднимает туннель через <code>wg-quick</code> (запросит пароль администратора).</p>
+        <div class="cards" id="tunnelList"></div>
+        <div class="empty" id="tunnelEmpty">
+          <div class="empty-ico">◐</div>
+          <p>Нет локальных туннелей. Добавьте устройство «этот Mac» на вкладке «Устройства» — оно появится здесь.</p>
+        </div>
+      </section>
+
+      <!-- REALITY -->
+      <section class="view" data-view="reality">
+        <div class="view-head"><h1>Reality · обход блокировок</h1></div>
+        <p class="hint">Xray VLESS + Reality маскирует трафик под обычный HTTPS к реальному сайту. Нужен, если провайдер режет WireGuard.</p>
+        <div class="panel">
+          <label class="fld"><span>Сервер</span>
+            <select id="realityProfile"></select>
+          </label>
+          <label class="fld"><span>Сайт-маскировка (SNI)</span>
+            <input id="realityDest" value="www.microsoft.com" placeholder="www.microsoft.com" />
+          </label>
+          <button class="btn primary" id="realityInstallBtn">Установить Reality</button>
+        </div>
+        <div class="reality-result" id="realityResult" hidden>
+          <div class="link-row"><code id="realityLink"></code><button class="btn ghost" id="copyLinkBtn">Копировать</button></div>
+          <img class="qr" id="realityQr" alt="QR" />
+          <p class="hint">Импортируйте ссылку в v2rayNG / Hiddify / Streisand / Nekoray.</p>
+        </div>
+      </section>
+
+      <!-- НАСТРОЙКИ -->
+      <section class="view" data-view="settings">
+        <div class="view-head"><h1>Настройки</h1></div>
+        <div class="panel kv">
+          <div><span>Версия</span><b id="setVer">1.0.0</b></div>
+          <div><span>Протоколы</span><b>WireGuard · Xray Reality</b></div>
+          <div><span>Хранилище</span><b class="mono">userData/selkorin.json</b></div>
+          <div><span>Шифрование</span><b>ChaCha20-Poly1305 · Curve25519</b></div>
+        </div>
+        <p class="hint">Selkorin — открытый менеджер собственного VPN. Данные хранятся только на этом Mac, ключи не покидают устройство.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Лог-консоль (выезжает снизу) -->
+  <div class="console" id="console" hidden>
+    <div class="console-head"><span id="consoleTitle">Журнал</span><button class="btn ghost sm" id="consoleClose">Закрыть</button></div>
+    <pre class="console-body" id="consoleBody"></pre>
+  </div>
+
+  <!-- Модальное окно -->
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <!-- Тосты -->
+  <div class="toasts" id="toasts"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
