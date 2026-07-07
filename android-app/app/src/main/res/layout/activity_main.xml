@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_app">
+
+    <!-- ЭКРАН БЛОКИРОВКИ -->
+    <LinearLayout
+        android:id="@+id/lockView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="36dp"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="108dp"
+            android:layout_height="108dp"
+            android:src="@mipmap/ic_launcher"
+            android:contentDescription="@string/app_name" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/lock_title"
+            android:textColor="@color/text"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.25" />
+
+        <TextView
+            android:id="@+id/lockSub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="26dp"
+            android:text="@string/lock_sub_unlock"
+            android:textColor="@color/dim"
+            android:textSize="11sp"
+            android:letterSpacing="0.2" />
+
+        <EditText
+            android:id="@+id/lockPass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_input"
+            android:gravity="center"
+            android:hint="@string/lock_hint_pass"
+            android:textColorHint="@color/dim"
+            android:textColor="@color/text"
+            android:textSize="18sp"
+            android:letterSpacing="0.15"
+            android:inputType="textPassword"
+            android:imeOptions="actionNext"
+            android:maxLines="1" />
+
+        <EditText
+            android:id="@+id/lockPass2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_input"
+            android:gravity="center"
+            android:hint="@string/lock_hint_repeat"
+            android:textColorHint="@color/dim"
+            android:textColor="@color/text"
+            android:textSize="18sp"
+            android:inputType="textPassword"
+            android:imeOptions="actionDone"
+            android:maxLines="1"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/lockBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_btn_primary"
+            android:text="@string/btn_unlock"
+            android:textColor="@color/bg"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:elevation="0dp"
+            android:paddingVertical="12dp" />
+
+        <Button
+            android:id="@+id/bioBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_btn_ghost"
+            android:text="@string/btn_biometric"
+            android:textColor="@color/text"
+            android:textAllCaps="false"
+            android:elevation="0dp"
+            android:paddingVertical="12dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/lockErr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textColor="@color/danger"
+            android:textSize="12sp"
+            android:minHeight="18dp" />
+    </LinearLayout>
+
+    <!-- ОСНОВНОЙ ЭКРАН -->
+    <LinearLayout
+        android:id="@+id/mainView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@mipmap/ic_launcher"
+                android:contentDescription="@string/app_name" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="9dp"
+                android:text="@string/lock_title"
+                android:textColor="@color/text"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.2" />
+
+            <TextView
+                android:id="@+id/settingsBtn"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:gravity="center"
+                android:text="⚙"
+                android:textColor="@color/muted"
+                android:textSize="17sp"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingVertical="20dp">
+
+            <FrameLayout
+                android:id="@+id/powerBtn"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:background="@drawable/bg_power_off"
+                android:clickable="true"
+                android:focusable="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="⏻"
+                    android:textSize="44sp"
+                    android:id="@+id/powerIco"
+                    android:textColor="@color/muted" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/heroStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/status_off"
+                android:textColor="@color/text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/heroServer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/no_key_selected"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/keys_title"
+                android:textColor="@color/dim"
+                android:textSize="11sp"
+                android:letterSpacing="0.15" />
+
+            <TextView
+                android:id="@+id/addKeyBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_btn_primary"
+                android:text="@string/add_key"
+                android:textColor="@color/bg"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/keyList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false" />
+
+        <TextView
+            android:id="@+id/keyEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/keys_empty"
+            android:textColor="@color/muted"
+            android:textSize="12.5sp"
+            android:lineSpacingMultiplier="1.3"
+            android:gravity="center"
+            android:paddingVertical="20dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</FrameLayout>

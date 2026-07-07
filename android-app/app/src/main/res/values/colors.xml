@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0A0A0D</color>
+    <color name="panel">#14141B</color>
+    <color name="elev">#1C1C25</color>
+    <color name="line">#1DFFFFFF</color>
+    <color name="line2">#2EFFFFFF</color>
+    <color name="text">#F1F1F6</color>
+    <color name="muted">#9A9AA8</color>
+    <color name="dim">#63636F</color>
+    <color name="white">#FFFFFF</color>
+    <color name="danger">#E0605F</color>
+    <color name="ok">#7FE0B0</color>
+    <color name="ok_glow">#4D7FE0B0</color>
+</resources>

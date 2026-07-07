@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_card"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="12dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <View
+        android:id="@+id/keyDot"
+        android:layout_width="9dp"
+        android:layout_height="9dp"
+        android:background="@drawable/bg_power_off" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/keyName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/keyType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/muted"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/keyBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_badge"
+        android:textColor="@color/muted"
+        android:textSize="9sp"
+        android:letterSpacing="0.05" />
+
+    <TextView
+        android:id="@+id/keyMenu"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="6dp"
+        android:gravity="center"
+        android:text="⋯"
+        android:textColor="@color/dim"
+        android:textSize="18sp"
+        android:background="?attr/selectableItemBackgroundBorderless" />
+
+</LinearLayout>

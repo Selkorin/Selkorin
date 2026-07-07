@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Selkorin</string>
+    <string name="disguise_label">Заметки</string>
+
+    <string name="lock_title">SELKORIN</string>
+    <string name="lock_sub_unlock">введите пароль</string>
+    <string name="lock_sub_setup">придумайте пароль</string>
+    <string name="lock_hint_pass">••••••</string>
+    <string name="lock_hint_repeat">повторите пароль</string>
+    <string name="btn_unlock">Разблокировать</string>
+    <string name="btn_setup">Задать пароль</string>
+    <string name="btn_biometric">🔒 Отпечаток / лицо</string>
+    <string name="err_min_len">Минимум 4 символа</string>
+    <string name="err_mismatch">Пароли не совпадают</string>
+    <string name="err_wrong">Неверный пароль</string>
+
+    <string name="status_off">Отключено</string>
+    <string name="status_on">Защищено</string>
+    <string name="no_key_selected">ключ не выбран</string>
+    <string name="tap_to_connect">нажмите, чтобы подключиться</string>
+
+    <string name="keys_title">Мои ключи</string>
+    <string name="add_key">＋ Вставить ключ</string>
+    <string name="keys_empty">Ключей пока нет. Нажмите «Вставить ключ» и вставьте vless://… (появится в следующем обновлении для Android) или WireGuard-конфиг, который дал администратор.</string>
+
+    <string name="add_key_title">Новый ключ</string>
+    <string name="add_key_sub">Вставьте ключ, который выдал администратор. Он сохранится зашифрованным на этом устройстве.</string>
+    <string name="key_name_hint">название (например «Дом», «Amsterdam»)</string>
+    <string name="key_secret_hint">вставьте WireGuard-конфиг ([Interface] …)</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_biometric">Вход по отпечатку / лицу</string>
+    <string name="settings_biometric_sub">Разблокировка биометрией вместо пароля.</string>
+    <string name="settings_biometric_unsupported">Не поддерживается на этом устройстве.</string>
+    <string name="settings_disguise">Замаскировать приложение</string>
+    <string name="settings_disguise_sub">Значок и название сменятся на «Заметки». Вернуть — этим же переключателем.</string>
+    <string name="settings_change_password">Сменить пароль</string>
+    <string name="settings_lock_now">Заблокировать сейчас</string>
+    <string name="close">Закрыть</string>
+
+    <string name="change_password_title">Смена пароля</string>
+    <string name="cur_password_hint">текущий пароль</string>
+    <string name="new_password_hint">новый пароль</string>
+    <string name="repeat_password_hint">повтор нового</string>
+    <string name="change">Сменить</string>
+
+    <string name="vless_not_supported">Reality/VLESS для Android появится в следующем обновлении. Ключ сохранён, но подключение пока доступно только для WireGuard.</string>
+    <string name="wg_not_installed">Не удалось запустить туннель WireGuard.</string>
+    <string name="vpn_permission_needed">Нужно разрешение на создание VPN-соединения.</string>
+    <string name="key_added">Ключ добавлен</string>
+    <string name="key_removed">Ключ удалён</string>
+    <string name="key_invalid">Не распознан формат ключа</string>
+    <string name="connected_to">Подключено: %1$s</string>
+    <string name="disconnected">Отключено</string>
+    <string name="delete">Удалить</string>
+    <string name="copy">Копировать</string>
+    <string name="copied">Скопировано</string>
+</resources>

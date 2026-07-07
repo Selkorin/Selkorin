@@ -1,0 +1,76 @@
+name: Build Selkorin Android
+
+on:
+  push:
+    branches: [ "claude/greeting-31dz93" ]
+    paths:
+      - "android-app/**"
+      - ".github/workflows/selkorin-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install librsvg (icon rasteriser)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
+
+      - name: Generate launcher icons (real + disguise)
+        run: |
+          set -e
+          declare -A sizes=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
+          for density in "${!sizes[@]}"; do
+            s="${sizes[$density]}"
+            dir="app/src/main/res/mipmap-${density}"
+            mkdir -p "$dir"
+            rsvg-convert -w "$s" -h "$s" icon-src/icon.svg -o "$dir/ic_launcher.png"
+            rsvg-convert -w "$s" -h "$s" icon-src/icon_disguise.svg -o "$dir/ic_launcher_disguise.png"
+          done
+          ls app/src/main/res/mipmap-xxxhdpi/
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Collect APK
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/out/Selkorin-Android.apk"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Selkorin-Android
+          path: out/Selkorin-Android.apk
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "selkorin-android-build-${{ github.run_number }}" \
+            "$GITHUB_WORKSPACE/out/Selkorin-Android.apk" \
+            --title "Selkorin Android — сборка ${{ github.run_number }}" \
+            --target "claude/greeting-31dz93" \
+            --notes "Пользовательское приложение Selkorin для Android (WireGuard, защита паролем/биометрией, маскировка значка). Скачай Selkorin-Android.apk на телефон, открой файл, разреши установку из этого источника при запросе. Reality/VLESS для Android появится в одном из следующих обновлений — пока полностью работает WireGuard."
