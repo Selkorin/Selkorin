@@ -1,0 +1,86 @@
+name: Build Selkorin Client (macOS)
+
+on:
+  push:
+    branches: [ "claude/greeting-31dz93" ]
+    paths:
+      - "client-app/**"
+      - ".github/workflows/selkorin-client-mac.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: client-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install librsvg (icon rasteriser)
+        run: brew install librsvg
+
+      - name: Build app icon (SVG -> PNG -> ICNS)
+        run: |
+          mkdir -p build/icons
+          for s in 16 32 64 128 256 512 1024; do
+            rsvg-convert -w "$s" -h "$s" build/icon.svg -o "build/icons/icon_$s.png"
+          done
+          node build/pack-icns.js
+
+      - name: Bundle Xray-core (VLESS/Reality engine, per arch)
+        run: |
+          set -e
+          mkdir -p resources/xray/arm64 resources/xray/x64
+          curl -fsSL -o xray-arm64.zip "https://github.com/XTLS/Xray-core/releases/latest/download/Xray-macos-arm64-v8a.zip"
+          curl -fsSL -o xray-x64.zip   "https://github.com/XTLS/Xray-core/releases/latest/download/Xray-macos-64.zip"
+          unzip -o xray-arm64.zip xray -d resources/xray/arm64
+          unzip -o xray-x64.zip   xray -d resources/xray/x64
+          chmod +x resources/xray/arm64/xray resources/xray/x64/xray
+          ls -l resources/xray/arm64 resources/xray/x64
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Package .app (Apple Silicon + Intel)
+        run: |
+          npm run pack:mac-arm
+          npm run pack:mac-x64
+
+      - name: Ad-hoc code sign
+        run: |
+          codesign --force --deep --sign - "dist/Selkorin-darwin-arm64/Selkorin.app"
+          codesign --force --deep --sign - "dist/Selkorin-darwin-x64/Selkorin.app"
+
+      - name: Build DMG installers
+        run: |
+          hdiutil create -volname "Selkorin" -srcfolder "dist/Selkorin-darwin-arm64/Selkorin.app" -ov -format UDZO "$GITHUB_WORKSPACE/Selkorin-Client-AppleSilicon.dmg"
+          hdiutil create -volname "Selkorin" -srcfolder "dist/Selkorin-darwin-x64/Selkorin.app" -ov -format UDZO "$GITHUB_WORKSPACE/Selkorin-Client-Intel.dmg"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Selkorin-Client-macOS
+          path: |
+            Selkorin-Client-AppleSilicon.dmg
+            Selkorin-Client-Intel.dmg
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "selkorin-client-build-${{ github.run_number }}" \
+            "$GITHUB_WORKSPACE/Selkorin-Client-AppleSilicon.dmg" \
+            "$GITHUB_WORKSPACE/Selkorin-Client-Intel.dmg" \
+            --title "Selkorin Client — сборка ${{ github.run_number }}" \
+            --target "claude/greeting-31dz93" \
+            --notes "Пользовательское приложение Selkorin для macOS (защита паролем/Touch ID, скрытие приложения). Скачай Selkorin-Client-AppleSilicon.dmg (M1–M4) или Selkorin-Client-Intel.dmg. Открой .dmg → перетащи «Selkorin» в «Программы». Первый запуск: правый клик → «Открыть». Если macOS не пускает: xattr -cr \"/Applications/Selkorin.app\""
