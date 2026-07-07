@@ -82,7 +82,10 @@ class Vault(context: Context) {
         require(unlock(oldPass)) { "Старый пароль неверен" }
         val oldKey = sessionKey!!
         val keys = readKeys()
-        val secrets = keys.map { decrypt(oldKey, it.getString("iv"), it.getString("ct")) }
+        val secrets = (0 until keys.length()).map { i ->
+            val k = keys.getJSONObject(i)
+            decrypt(oldKey, k.getString("iv"), k.getString("ct"))
+        }
         val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
         val newKey = deriveKey(newPass, salt)
         val (vIv, vCt) = encrypt(newKey, VERIFIER)
