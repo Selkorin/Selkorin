@@ -12,6 +12,7 @@ const state = {
   selectedId: null,
   clients: [],
   wg: { installed: false, activeName: null, tunnels: [] },
+  reality: { installed: false, clients: [], online: 0, meta: null },
 };
 
 // ---------- утилиты ----------
@@ -89,14 +90,82 @@ $('#consoleClose').addEventListener('click', () => ($('#console').hidden = true)
 function switchView(name) {
   $$('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   $$('.view').forEach((v) => v.classList.toggle('active', v.dataset.view === name));
+  if (name === 'overview') renderOverview();
   if (name === 'devices') renderDevices();
   if (name === 'thismac') renderThisMac();
-  if (name === 'reality') renderRealityProfiles();
+  if (name === 'reality') { renderRealityProfiles(); loadRealityClients(); }
 }
 $('#nav').addEventListener('click', (e) => {
   const b = e.target.closest('.nav-item');
   if (b) switchView(b.dataset.view);
 });
+
+// ---------- ОБЗОР (дашборд) ----------
+function statTile(label, val, kind) {
+  return h('div', { class: `stat ${kind || ''}` },
+    h('div', { class: 'stat-val' }, String(val)),
+    h('div', { class: 'stat-label' }, label));
+}
+
+async function renderOverview() {
+  const p = selectedProfile();
+  const grid = $('#statGrid');
+  const body = $('#overviewBody');
+  const tableWrap = $('#overviewTableWrap');
+  const onlineTitle = $('#overviewOnlineTitle');
+  if (!p) {
+    $('#overviewHint').innerHTML = 'Нет активного сервера. Добавьте VPS на вкладке <b>«Серверы»</b> и выберите его.';
+    grid.innerHTML = '';
+    tableWrap.hidden = true; onlineTitle.hidden = true;
+    return;
+  }
+  $('#overviewHint').innerHTML = `Сервер: <b>${p.name}</b> · <span class="mono">${p.endpoint || p.host}</span>`;
+  grid.innerHTML = '';
+  grid.append(h('div', { class: 'stat' }, h('span', { class: 'spinner' })));
+  try {
+    const [clients, reality] = await Promise.all([
+      call(API.server.clients(p)).catch(() => []),
+      (API.reality ? call(API.reality.list(p)).catch(() => ({ installed: false, clients: [], online: 0 })) : { installed: false, clients: [], online: 0 }),
+    ]);
+    state.clients = clients;
+    state.reality = reality;
+    const wgOnline = clients.filter((c) => c.online).length;
+    const rx = clients.reduce((a, c) => a + (c.rx || 0), 0);
+    const tx = clients.reduce((a, c) => a + (c.tx || 0), 0);
+    const live = wgOnline + (reality.online || 0);
+    const realityCount = reality.installed ? reality.clients.length : '—';
+
+    grid.innerHTML = '';
+    grid.append(
+      statTile('Подключено сейчас', live, 'accent'),
+      statTile('Устройства WireGuard', `${wgOnline} / ${clients.length}`),
+      statTile('Ключи Reality', realityCount),
+      statTile('Трафик ↓ / ↑', `${fmtBytes(rx)} / ${fmtBytes(tx)}`),
+    );
+
+    const onlineList = clients.filter((c) => c.online);
+    onlineTitle.hidden = false;
+    tableWrap.hidden = false;
+    body.innerHTML = '';
+    if (!onlineList.length) {
+      body.append(h('tr', {}, h('td', { colspan: 5, style: 'color:var(--muted);text-align:center;padding:22px' }, 'По WireGuard сейчас никто не подключён.')));
+    } else {
+      for (const c of onlineList) {
+        body.append(h('tr', {},
+          h('td', {}, h('span', { class: 'status-dot online' })),
+          h('td', {}, h('b', {}, c.name)),
+          h('td', { class: 'mono' }, (c.allowedIps || '').split(',')[0] || '—'),
+          h('td', { class: 'mono' }, fmtAgo(c.lastHandshake)),
+          h('td', { class: 'mono' }, `${fmtBytes(c.rx)} / ${fmtBytes(c.tx)}`)));
+      }
+    }
+  } catch (e) {
+    grid.innerHTML = '';
+    grid.append(statTile('Ошибка', '—'));
+    toast(`Обзор: ${e.message}`, 'err');
+  }
+}
+$('#overviewRefresh').addEventListener('click', renderOverview);
 
 // ---------- СЕРВЕРЫ ----------
 async function loadProfiles() {
@@ -378,16 +447,62 @@ function updateTopStatus() {
   $('#topStatusText').textContent = on ? `подключён · ${state.wg.activeName}` : 'не подключён';
 }
 
-// ---------- REALITY ----------
+// ---------- КЛЮЧИ · REALITY ----------
 function renderRealityProfiles() {
   const sel = $('#realityProfile');
+  const prev = sel.value;
   sel.innerHTML = '';
   for (const p of state.profiles) sel.append(h('option', { value: p.id }, `${p.name} (${p.host})`));
-  if (state.selectedId) sel.value = state.selectedId;
+  if (prev && state.profiles.some((p) => p.id === prev)) sel.value = prev;
+  else if (state.selectedId) sel.value = state.selectedId;
 }
-$('#realityInstallBtn').addEventListener('click', async () => {
+function realityProfile() {
   const id = $('#realityProfile').value;
-  const p = state.profiles.find((x) => x.id === id);
+  return state.profiles.find((x) => x.id === id) || selectedProfile();
+}
+$('#realityProfile').addEventListener('change', loadRealityClients);
+
+async function loadRealityClients() {
+  const p = realityProfile();
+  const installPanel = $('#realityInstallPanel');
+  const clientsPanel = $('#realityClientsPanel');
+  const body = $('#realityClientsBody');
+  if (!p || !API.reality) { installPanel.hidden = false; clientsPanel.hidden = true; return; }
+  body.innerHTML = '';
+  body.append(rowMsgR('Загрузка ключей…'));
+  clientsPanel.hidden = false;
+  try {
+    const data = await call(API.reality.list(p));
+    state.reality = data;
+    if (!data.installed) {
+      installPanel.hidden = false;
+      clientsPanel.hidden = true;
+      return;
+    }
+    installPanel.hidden = true;
+    clientsPanel.hidden = false;
+    $('#realityOnline').textContent = `● ${data.online || 0} подключений`;
+    body.innerHTML = '';
+    if (!data.clients.length) { body.append(rowMsgR('Ключей пока нет. Создайте первый — появится ссылка и QR.')); return; }
+    for (const c of data.clients) {
+      body.append(h('tr', {},
+        h('td', {}, h('b', {}, c.name)),
+        h('td', { class: 'mono' }, c.uuid.slice(0, 18) + '…'),
+        h('td', { style: 'text-align:right;white-space:nowrap' },
+          h('button', { class: 'btn sm primary', onclick: () => showRealityKey(c) }, 'QR / ссылка'),
+          h('button', { class: 'btn sm danger', onclick: () => revokeRealityKey(c.name) }, 'Отозвать'))));
+    }
+  } catch (e) {
+    body.innerHTML = '';
+    body.append(rowMsgR('Ошибка: ' + e.message));
+  }
+}
+function rowMsgR(text) {
+  return h('tr', {}, h('td', { colspan: 3, style: 'color:var(--muted);text-align:center;padding:22px' }, text));
+}
+
+$('#realityInstallBtn').addEventListener('click', async () => {
+  const p = realityProfile();
   if (!p) { toast('Нет сервера', 'err'); return; }
   const dest = $('#realityDest').value.trim() || 'www.microsoft.com';
   if (!confirm(`Установить Xray Reality на «${p.name}» с маскировкой под ${dest}?`)) return;
@@ -395,17 +510,57 @@ $('#realityInstallBtn').addEventListener('click', async () => {
   if (logUnsub) logUnsub();
   logUnsub = API.onLog ? API.onLog(appendConsole) : null;
   try {
-    const r = await call(API.server.reality(p, dest));
-    $('#realityLink').textContent = r.link;
-    try { $('#realityQr').src = await call(API.qr(r.link)); } catch {}
-    $('#realityResult').hidden = false;
+    await call(API.server.reality(p, dest));
     toast('✓ Reality установлен', 'ok');
+    appendConsole('\n[✓] Готово. Теперь можно выдавать ключи.\n');
+    await loadRealityClients();
   } catch (e) { toast(e.message, 'err'); appendConsole(`\n[x] ${e.message}\n`); }
   finally { if (logUnsub) { logUnsub(); logUnsub = null; } }
 });
-$('#copyLinkBtn').addEventListener('click', () => {
-  navigator.clipboard.writeText($('#realityLink').textContent).then(() => toast('Ссылка скопирована', 'ok'));
-});
+
+$('#realityAddBtn').addEventListener('click', createRealityKey);
+$('#realityClientName').addEventListener('keydown', (e) => { if (e.key === 'Enter') createRealityKey(); });
+
+async function createRealityKey() {
+  const p = realityProfile();
+  if (!p) { toast('Нет сервера', 'err'); return; }
+  const inp = $('#realityClientName');
+  const name = inp.value.trim();
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) { toast('Имя: только буквы, цифры, - и _', 'err'); return; }
+  const btn = $('#realityAddBtn');
+  btn.disabled = true; btn.textContent = 'Создаю…';
+  try {
+    const res = await call(API.reality.add(p, name));
+    inp.value = '';
+    await loadRealityClients();
+    showRealityKey({ name: res.name, link: res.link });
+    toast(`✓ Ключ «${res.name}» создан`, 'ok');
+  } catch (e) { toast(e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '＋ Создать ключ'; }
+}
+
+async function showRealityKey(c) {
+  if (!c.link) { toast('Ссылка недоступна для этого ключа', 'err'); return; }
+  let qr = '';
+  try { qr = await call(API.qr(c.link)); } catch {}
+  const form = h('div', {},
+    h('h2', {}, `Ключ «${c.name}»`),
+    h('div', { class: 'sub' }, 'Отсканируйте QR в v2rayNG / Hiddify / Streisand, или скопируйте ссылку.'),
+    h('div', { class: 'qr-wrap' }, qr ? h('img', { class: 'qr', src: qr, alt: 'QR' }) : h('div', { class: 'hint' }, '(QR недоступен)')),
+    h('div', { class: 'link-row' }, h('code', {}, c.link)),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn ghost', onclick: closeModal }, 'Закрыть'),
+      h('button', { class: 'btn', onclick: async () => { try { const pth = await call(API.saveFile(`${c.name}.txt`, c.link)); if (pth) toast(`Сохранено: ${pth}`, 'ok'); } catch (e) { toast(e.message, 'err'); } } }, 'Сохранить ссылку'),
+      h('button', { class: 'btn primary', onclick: () => { navigator.clipboard.writeText(c.link).then(() => toast('Ссылка скопирована', 'ok')); } }, 'Копировать')));
+  openModal(form);
+}
+
+async function revokeRealityKey(name) {
+  const p = realityProfile();
+  if (!confirm(`Отозвать ключ «${name}»? Пользователь потеряет доступ.`)) return;
+  try { await call(API.reality.del(p, name)); toast(`«${name}» отозван`, 'ok'); await loadRealityClients(); }
+  catch (e) { toast(e.message, 'err'); }
+}
 
 // ---------- init ----------
 async function init() {
@@ -414,6 +569,7 @@ async function init() {
   await loadProfiles();
   try { state.wg = await call(API.wg.status()); updateTopStatus(); } catch {}
   if (location.hash) switchView(location.hash.slice(1));
+  else renderOverview();
 }
 init();
 
@@ -436,6 +592,17 @@ function demoAPI() {
       bootstrap: (p) => D.ok(p), clients: () => D.ok(clients),
       addClient: (p, n) => D.ok({ name: n, conf: '[Interface]\nPrivateKey = demo\nAddress = 10.66.66.9/24' }),
       delClient: () => D.ok(true), reality: () => D.ok({ link: 'vless://demo@203.0.113.45:443?...' }),
+    },
+    reality: {
+      list: () => D.ok({
+        installed: true, online: 2, meta: { pbk: 'demoPbk', sid: 'ab12cd34', sni: 'www.microsoft.com', port: '443', ip: '203.0.113.45' },
+        clients: [
+          { name: 'default', uuid: '11111111-2222-3333-4444-555555555555', link: 'vless://11111111-2222-3333-4444-555555555555@203.0.113.45:443?encryption=none&security=reality&sni=www.microsoft.com&fp=chrome&pbk=demoPbk&sid=ab12cd34&type=tcp&flow=xtls-rprx-vision#default' },
+          { name: 'ivan', uuid: '66666666-7777-8888-9999-000000000000', link: 'vless://66666666-7777-8888-9999-000000000000@203.0.113.45:443?encryption=none&security=reality&sni=www.microsoft.com&fp=chrome&pbk=demoPbk&sid=ab12cd34&type=tcp&flow=xtls-rprx-vision#ivan' },
+        ],
+      }),
+      add: (p, n) => D.ok({ name: n, link: `vless://demo-${n}@203.0.113.45:443?encryption=none&security=reality&sni=www.microsoft.com&fp=chrome&pbk=demoPbk&sid=ab12cd34&type=tcp&flow=xtls-rprx-vision#${n}` }),
+      del: () => D.ok(true),
     },
     wg: {
       installed: () => D.ok({ installed: true }),

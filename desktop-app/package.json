@@ -1,8 +1,8 @@
 {
   "name": "selkorin-vpn",
   "productName": "Selkorin VPN",
-  "version": "1.0.0",
-  "description": "Selkorin VPN — приватный WireGuard/Reality менеджер (чёрно-белый футуризм)",
+  "version": "1.1.0",
+  "description": "Selkorin VPN — админ-панель WireGuard/Reality: генератор ключей и статистика подключений",
   "main": "src/main/main.js",
   "author": "Selkorin",
   "license": "MIT",

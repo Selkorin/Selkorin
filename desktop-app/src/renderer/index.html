@@ -22,10 +22,11 @@
         <div class="brand-sub">private network</div>
       </div>
       <nav class="nav" id="nav">
-        <button class="nav-item active" data-view="servers"><span class="nav-ico">◈</span>Серверы</button>
+        <button class="nav-item active" data-view="overview"><span class="nav-ico">◆</span>Обзор</button>
+        <button class="nav-item" data-view="servers"><span class="nav-ico">◈</span>Серверы</button>
         <button class="nav-item" data-view="devices"><span class="nav-ico">▤</span>Устройства</button>
+        <button class="nav-item" data-view="reality"><span class="nav-ico">◇</span>Ключи · Reality</button>
         <button class="nav-item" data-view="thismac"><span class="nav-ico">◐</span>Этот Mac</button>
-        <button class="nav-item" data-view="reality"><span class="nav-ico">◇</span>Reality</button>
         <button class="nav-item" data-view="settings"><span class="nav-ico">⚙</span>Настройки</button>
       </nav>
       <div class="sidebar-foot">
@@ -37,8 +38,25 @@
     <!-- Контент -->
     <main class="content" id="content">
 
+      <!-- ОБЗОР -->
+      <section class="view active" data-view="overview">
+        <div class="view-head">
+          <h1>Обзор</h1>
+          <button class="btn" id="overviewRefresh">↻ Обновить</button>
+        </div>
+        <p class="hint" id="overviewHint">Сводка по выбранному серверу: сколько людей подключено прямо сейчас и суммарный трафик.</p>
+        <div class="stat-grid" id="statGrid"></div>
+        <h2 class="section-title" id="overviewOnlineTitle" hidden>Онлайн сейчас</h2>
+        <div class="table-wrap" id="overviewTableWrap" hidden>
+          <table class="tbl">
+            <thead><tr><th></th><th>Имя</th><th>Адрес в VPN</th><th>Последний хендшейк</th><th>Трафик ↓/↑</th></tr></thead>
+            <tbody id="overviewBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- СЕРВЕРЫ -->
-      <section class="view active" data-view="servers">
+      <section class="view" data-view="servers">
         <div class="view-head">
           <h1>Серверы</h1>
           <button class="btn primary" id="addServerBtn">＋ Добавить сервер</button>
@@ -74,23 +92,41 @@
         </div>
       </section>
 
-      <!-- REALITY -->
+      <!-- REALITY · ГЕНЕРАТОР КЛЮЧЕЙ -->
       <section class="view" data-view="reality">
-        <div class="view-head"><h1>Reality · обход блокировок</h1></div>
-        <p class="hint">Xray VLESS + Reality маскирует трафик под обычный HTTPS к реальному сайту. Нужен, если провайдер режет WireGuard.</p>
-        <div class="panel">
-          <label class="fld"><span>Сервер</span>
-            <select id="realityProfile"></select>
-          </label>
+        <div class="view-head"><h1>Ключи · Reality</h1></div>
+        <p class="hint">Генератор VLESS-ключей. Каждому пользователю — своя <code>vless://</code>-ссылка и QR. Доступ можно отозвать индивидуально. Reality маскирует трафик под обычный HTTPS к реальному сайту.</p>
+
+        <label class="fld" style="max-width:520px"><span>Сервер</span>
+          <select id="realityProfile"></select>
+        </label>
+
+        <!-- Установка (если Reality ещё не стоит) -->
+        <div class="panel" id="realityInstallPanel">
+          <div class="panel-title">Установка Reality на сервер</div>
           <label class="fld"><span>Сайт-маскировка (SNI)</span>
             <input id="realityDest" value="www.microsoft.com" placeholder="www.microsoft.com" />
           </label>
           <button class="btn primary" id="realityInstallBtn">Установить Reality</button>
+          <p class="hint" style="margin-bottom:0">Разовая установка. После неё появится генератор ключей.</p>
         </div>
-        <div class="reality-result" id="realityResult" hidden>
-          <div class="link-row"><code id="realityLink"></code><button class="btn ghost" id="copyLinkBtn">Копировать</button></div>
-          <img class="qr" id="realityQr" alt="QR" />
-          <p class="hint">Импортируйте ссылку в v2rayNG / Hiddify / Streisand / Nekoray.</p>
+
+        <!-- Генератор ключей -->
+        <div class="panel" id="realityClientsPanel" hidden>
+          <div class="panel-head">
+            <div class="panel-title">Ключи VLESS</div>
+            <span class="badge live" id="realityOnline">● 0 подключений</span>
+          </div>
+          <div class="gen-row">
+            <input id="realityClientName" placeholder="имя пользователя (например user1, ivan, phone)" />
+            <button class="btn primary" id="realityAddBtn">＋ Создать ключ</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>Имя</th><th>UUID</th><th></th></tr></thead>
+              <tbody id="realityClientsBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 

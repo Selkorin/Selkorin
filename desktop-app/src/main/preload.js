@@ -18,6 +18,11 @@ contextBridge.exposeInMainWorld('selkorin', {
     delClient: (profile, name) => invoke('server:delClient', { profile, name }),
     reality: (profile, dest) => invoke('server:reality', { profile, dest }),
   },
+  reality: {
+    add: (profile, name) => invoke('reality:add', { profile, name }),
+    list: (profile) => invoke('reality:list', profile),
+    del: (profile, name) => invoke('reality:del', { profile, name }),
+  },
   wg: {
     installed: () => invoke('wg:installed'),
     status: () => invoke('wg:status'),

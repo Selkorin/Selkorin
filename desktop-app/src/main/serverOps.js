@@ -4,7 +4,10 @@
 const path = require('path');
 const ssh = require('./ssh');
 
-const SCRIPTS = ['install-server.sh', 'add-client.sh', 'del-client.sh', 'install-xray-reality.sh'];
+const SCRIPTS = [
+  'install-server.sh', 'add-client.sh', 'del-client.sh', 'install-xray-reality.sh',
+  'reality-client-add.sh', 'reality-client-list.sh', 'reality-client-del.sh',
+];
 
 function scriptsDir() {
   return path.join(__dirname, '..', '..', 'resources', 'scripts');
@@ -136,6 +139,83 @@ async function installReality(profile, dest, onLog) {
   }
 }
 
+// ---- Reality: генератор ключей (много пользователей) ----
+
+function buildVlessLink(uuid, meta, name) {
+  const tag = encodeURIComponent(name || 'Reality');
+  return `vless://${uuid}@${meta.ip}:${meta.port}?encryption=none&security=reality` +
+    `&sni=${meta.sni}&fp=chrome&pbk=${meta.pbk}&sid=${meta.sid}` +
+    `&type=tcp&flow=xtls-rprx-vision#${tag}`;
+}
+
+// Выдать новый VLESS-ключ пользователю → вернуть { name, link }
+async function realityAddClient(profile, name) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) throw new Error('Имя: только буквы, цифры, - и _');
+  const conn = await ssh.connect(profile);
+  try {
+    const dir = profile.scriptsDir || (await remoteDir(conn));
+    await uploadScripts(conn, dir);
+    const run = await ssh.exec(conn, ssh.sudo(profile, `cd ${ssh.shellQuote(dir)} && bash reality-client-add.sh ${ssh.shellQuote(name)}`));
+    const out = `${run.stdout || ''}\n${run.stderr || ''}`;
+    if (/SELKORIN_NOTINSTALLED/.test(out)) throw new Error('Сначала установите Reality на этом сервере (кнопка выше).');
+    if (/SELKORIN_EXISTS=/.test(out)) throw new Error(`Ключ «${name}» уже существует`);
+    const m = out.match(/SELKORIN_LINK=(\S+)/);
+    if (!m) throw new Error((run.stderr || run.stdout || 'Не удалось создать ключ').trim());
+    return { name, link: m[1] };
+  } finally {
+    conn.end();
+  }
+}
+
+// Список выданных ключей + число живых подключений
+async function realityListClients(profile) {
+  const conn = await ssh.connect(profile);
+  try {
+    const dir = profile.scriptsDir || (await remoteDir(conn));
+    await uploadScripts(conn, dir);
+    const run = await ssh.exec(conn, ssh.sudo(profile, `cd ${ssh.shellQuote(dir)} && bash reality-client-list.sh`));
+    const out = run.stdout || '';
+    if (/SELKORIN_NOTINSTALLED/.test(out)) return { installed: false, clients: [], online: 0, meta: null };
+    let online = 0;
+    let meta = null;
+    const rows = [];
+    for (const line of out.split('\n')) {
+      if (line.startsWith('SELKORIN_ONLINE=')) { online = Number(line.slice(16)) || 0; continue; }
+      if (line.startsWith('SELKORIN_META=')) {
+        const [pbk, sid, sni, port, ip] = line.slice(14).split('|');
+        meta = { pbk, sid, sni, port, ip };
+        continue;
+      }
+      const tab = line.indexOf('\t');
+      if (tab > -1) {
+        const name = line.slice(0, tab).trim();
+        const uuid = line.slice(tab + 1).trim();
+        if (uuid) rows.push({ name: name || 'default', uuid });
+      }
+    }
+    const clients = rows.map((c) => ({ ...c, link: meta ? buildVlessLink(c.uuid, meta, c.name) : null }));
+    return { installed: true, clients, online, meta };
+  } finally {
+    conn.end();
+  }
+}
+
+// Отозвать ключ пользователя
+async function realityDelClient(profile, name) {
+  const conn = await ssh.connect(profile);
+  try {
+    const dir = profile.scriptsDir || (await remoteDir(conn));
+    await uploadScripts(conn, dir);
+    const run = await ssh.exec(conn, ssh.sudo(profile, `cd ${ssh.shellQuote(dir)} && bash reality-client-del.sh ${ssh.shellQuote(name)}`));
+    if (!/SELKORIN_DELETED=/.test(run.stdout || '')) {
+      throw new Error((run.stderr || run.stdout || 'Ошибка отзыва ключа').trim());
+    }
+    return true;
+  } finally {
+    conn.end();
+  }
+}
+
 // ---- парсеры ----
 function parseEnv(text) {
   const out = {};
@@ -206,6 +286,9 @@ module.exports = {
   addClient,
   delClient,
   installReality,
+  realityAddClient,
+  realityListClients,
+  realityDelClient,
   _parseServerConf: parseServerConf,
   _parseWgDump: parseWgDump,
 };

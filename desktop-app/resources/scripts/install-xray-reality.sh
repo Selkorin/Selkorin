@@ -24,7 +24,7 @@ die()  { echo -e "${C_RED}[x]${C_OFF} $*" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || die "Запусти от root: sudo bash $0"
 
 log "Ставлю Xray-core (официальный установщик)..."
-apt-get update -qq && apt-get install -y -qq curl qrencode ca-certificates >/dev/null
+apt-get update -qq && apt-get install -y -qq curl qrencode ca-certificates jq >/dev/null
 bash -c "$(curl -fsSL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install >/dev/null
 
 PUB_IP="$(curl -fsS4 https://api.ipify.org || curl -fsS4 https://ifconfig.me)"
@@ -47,7 +47,7 @@ cat >/usr/local/etc/xray/config.json <<EOF
       "protocol": "vless",
       "settings": {
         "clients": [
-          { "id": "${UUID}", "flow": "xtls-rprx-vision" }
+          { "id": "${UUID}", "flow": "xtls-rprx-vision", "email": "default" }
         ],
         "decryption": "none"
       },
@@ -72,6 +72,16 @@ cat >/usr/local/etc/xray/config.json <<EOF
   ]
 }
 EOF
+
+# Сохраняем параметры для генератора ключей (reality-client-*.sh)
+cat >/usr/local/etc/xray/selkorin.env <<EOF
+PUB_IP=${PUB_IP}
+XRAY_PORT=${XRAY_PORT}
+DEST_SITE=${DEST_SITE}
+PUB_KEY=${PUB_KEY}
+SHORT_ID=${SHORT_ID}
+EOF
+chmod 600 /usr/local/etc/xray/selkorin.env
 
 systemctl enable xray >/dev/null 2>&1 || true
 systemctl restart xray

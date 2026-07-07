@@ -71,6 +71,11 @@ ipcMain.handle('server:addClient', async (_e, { profile, name }) => { try { retu
 ipcMain.handle('server:delClient', async (_e, { profile, name }) => { try { return ok(await serverOps.delClient(profile, name)); } catch (e) { return fail(e); } });
 ipcMain.handle('server:reality', async (event, { profile, dest }) => { try { return ok(await serverOps.installReality(profile, dest, logSink(event))); } catch (e) { return fail(e); } });
 
+// ---- Reality: генератор ключей ----
+ipcMain.handle('reality:add', async (_e, { profile, name }) => { try { return ok(await serverOps.realityAddClient(profile, name)); } catch (e) { return fail(e); } });
+ipcMain.handle('reality:list', async (_e, profile) => { try { return ok(await serverOps.realityListClients(profile)); } catch (e) { return fail(e); } });
+ipcMain.handle('reality:del', async (_e, { profile, name }) => { try { return ok(await serverOps.realityDelClient(profile, name)); } catch (e) { return fail(e); } });
+
 // ---- QR ----
 ipcMain.handle('qr', async (_e, text) => {
   try {
