@@ -5,12 +5,11 @@ const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
 contextBridge.exposeInMainWorld('selkorin', {
   sec: {
     status: () => invoke('sec:status'),
-    setup: (password) => invoke('sec:setup', password),
-    unlock: (password) => invoke('sec:unlock', password),
-    lock: () => invoke('sec:lock'),
-    changePassword: (oldPass, newPass) => invoke('sec:changePassword', { oldPass, newPass }),
-    enableBiometric: (password) => invoke('sec:enableBiometric', password),
-    disableBiometric: () => invoke('sec:disableBiometric'),
+    setLock: (method, secret) => invoke('sec:setLock', { method, secret }),
+    clearLock: () => invoke('sec:clearLock'),
+    unlock: (secret) => invoke('sec:unlock', secret),
+    lockNow: () => invoke('sec:lockNow'),
+    setBiometric: (on) => invoke('sec:setBiometric', on),
     biometricUnlock: () => invoke('sec:biometricUnlock'),
   },
   settings: {
@@ -31,5 +30,7 @@ contextBridge.exposeInMainWorld('selkorin', {
   qr: (text) => invoke('qr', text),
   openExternal: (url) => invoke('open:external', url),
   version: () => invoke('app:version'),
+  clipboard: { read: () => invoke('clipboard:read'), write: (text) => invoke('clipboard:write', text) },
+  camera: { requestAccess: () => invoke('camera:requestAccess') },
   onLocked: (cb) => { const h = () => cb(); ipcRenderer.on('locked', h); return () => ipcRenderer.removeListener('locked', h); },
 });

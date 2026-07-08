@@ -1,16 +1,16 @@
 {
   "name": "selkorin-client",
   "productName": "Selkorin",
-  "version": "1.0.0",
-  "description": "Selkorin — пользовательский VPN-клиент (WireGuard / VLESS Reality) с защитой паролем",
+  "version": "1.1.0",
+  "description": "Selkorin — пользовательский VPN-клиент (WireGuard / VLESS Reality) с опциональной защитой",
   "main": "src/main/main.js",
   "author": "Selkorin",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "make-icon": "node build/pack-icns.js",
-    "pack:mac-arm": "electron-packager . \"Selkorin\" --platform=darwin --arch=arm64 --icon=build/icon.icns --out=dist --overwrite --app-bundle-id=com.selkorin.client --app-category-type=public.app-category.utilities --prune=true --extra-resource=resources/xray --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/resources/xray\" --ignore=\"^/\\.git\"",
-    "pack:mac-x64": "electron-packager . \"Selkorin\" --platform=darwin --arch=x64 --icon=build/icon.icns --out=dist --overwrite --app-bundle-id=com.selkorin.client --app-category-type=public.app-category.utilities --prune=true --extra-resource=resources/xray --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/resources/xray\" --ignore=\"^/\\.git\""
+    "pack:mac-arm": "electron-packager . \"Selkorin\" --platform=darwin --arch=arm64 --icon=build/icon.icns --extend-info=build/Info.additions.plist --out=dist --overwrite --app-bundle-id=com.selkorin.client --app-category-type=public.app-category.utilities --prune=true --extra-resource=resources/xray --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/resources/xray\" --ignore=\"^/\\.git\"",
+    "pack:mac-x64": "electron-packager . \"Selkorin\" --platform=darwin --arch=x64 --icon=build/icon.icns --extend-info=build/Info.additions.plist --out=dist --overwrite --app-bundle-id=com.selkorin.client --app-category-type=public.app-category.utilities --prune=true --extra-resource=resources/xray --ignore=\"^/dist\" --ignore=\"^/build\" --ignore=\"^/resources/xray\" --ignore=\"^/\\.git\""
   },
   "dependencies": {
     "qrcode": "^1.5.4"

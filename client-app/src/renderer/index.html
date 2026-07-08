@@ -9,25 +9,41 @@
 <body>
   <div class="drag-strip"></div>
 
-  <!-- ЭКРАН БЛОКИРОВКИ -->
-  <section id="lock" class="lock">
-    <img class="lock-logo" src="dragon.svg" alt="Selkorin" />
-    <div class="lock-name">SELKORIN</div>
-    <div class="lock-sub" id="lockSub">введите пароль</div>
-    <input id="lockPass" class="lock-input" type="password" placeholder="••••••" autocomplete="off" />
-    <input id="lockPass2" class="lock-input" type="password" placeholder="повторите пароль" autocomplete="off" hidden />
-    <button id="lockBtn" class="btn primary wide">Разблокировать</button>
-    <button id="bioBtn" class="btn ghost wide" hidden>🔒 Touch ID</button>
+  <!-- ЭКРАН БЛОКИРОВКИ (показывается только если пользователь включил защиту) -->
+  <section id="lock" class="lock" hidden>
+    <div class="wordmark lg">SELKORIN</div>
+    <div class="lock-sub" id="lockSub">введите код</div>
+
+    <!-- PIN -->
+    <div id="lockPin" class="lock-pane" hidden>
+      <div class="pin-dots" id="pinDots">
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      </div>
+      <div class="pinpad" id="pinpad">
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+        <button class="pin-bio" id="bioKey" hidden>👆</button><button data-k="0">0</button><button class="pin-del" id="delKey">⌫</button>
+      </div>
+    </div>
+
+    <!-- ГРАФИЧЕСКИЙ КЛЮЧ -->
+    <div id="lockPattern" class="lock-pane" hidden>
+      <div class="pattern-host" id="patternHost"></div>
+      <button class="btn ghost" id="patBioKey" hidden>👆 Touch ID</button>
+    </div>
+
     <div id="lockErr" class="lock-err"></div>
   </section>
 
   <!-- ОСНОВНОЙ ЭКРАН -->
   <main id="main" class="main" hidden>
     <header class="top">
-      <div class="top-brand"><img src="dragon.svg" class="top-logo" alt="" />SELKORIN</div>
+      <div class="wordmark">SELKORIN</div>
       <div class="top-actions">
         <button id="settingsBtn" class="icon-btn" title="Настройки">⚙</button>
-        <button id="lockNowBtn" class="icon-btn" title="Заблокировать">⏻</button>
+        <button id="lockNowBtn" class="icon-btn" title="Заблокировать" hidden>⏻</button>
       </div>
     </header>
 
@@ -43,11 +59,11 @@
     <div class="keys">
       <div class="keys-head">
         <span>Мои ключи</span>
-        <button id="addKeyBtn" class="btn sm primary">＋ Вставить ключ</button>
+        <button id="addKeyBtn" class="btn sm primary">＋ Добавить ключ</button>
       </div>
       <div id="keyList" class="key-list"></div>
       <div id="keyEmpty" class="key-empty" hidden>
-        Ключей пока нет. Нажмите «Вставить ключ» и вставьте <code>vless://…</code> или WireGuard-конфиг, который дал администратор.
+        Ключей пока нет. Нажмите «Добавить ключ» и вставьте <code>vless://…</code> или WireGuard-конфиг, либо отсканируйте QR.
       </div>
     </div>
 

@@ -5,6 +5,7 @@
 // через Reality. Отключение возвращает системный прокси в исходное состояние.
 const { app } = require('electron');
 const { spawn, exec } = require('child_process');
+const net = require('net');
 const fs = require('fs');
 const path = require('path');
 
@@ -112,6 +113,35 @@ async function setSystemProxy(on) {
   if (r.code !== 0) throw new Error((r.stderr || r.stdout || 'Не удалось настроить системный прокси').trim());
 }
 
+// Реальная проверка туннеля: через локальный SOCKS5 просим xray дотянуться
+// до внешнего хоста. Ответ SOCKS 0x00 приходит только когда исходящее
+// соединение через Reality реально установлено — это честный тест «а работает ли».
+function probeThroughProxy(host, port, timeoutMs = 6000) {
+  return new Promise((resolve) => {
+    const sock = net.connect(SOCKS_PORT, SOCKS_HOST);
+    let stage = 0;
+    const finish = (okv) => { try { sock.destroy(); } catch {} resolve(okv); };
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    sock.on('error', () => { clearTimeout(timer); finish(false); });
+    sock.on('connect', () => sock.write(Buffer.from([0x05, 0x01, 0x00]))); // greeting, no-auth
+    sock.on('data', (buf) => {
+      if (stage === 0) {
+        if (buf.length < 2 || buf[1] !== 0x00) { clearTimeout(timer); return finish(false); }
+        const hb = Buffer.from(host, 'utf8');
+        const req = Buffer.concat([
+          Buffer.from([0x05, 0x01, 0x00, 0x03, hb.length]), hb,
+          Buffer.from([(port >> 8) & 0xff, port & 0xff]),
+        ]);
+        stage = 1;
+        sock.write(req);
+      } else {
+        clearTimeout(timer);
+        finish(buf.length >= 2 && buf[1] === 0x00); // REP==0x00 → соединение установлено
+      }
+    });
+  });
+}
+
 async function start(link) {
   const bin = xrayBin();
   if (!bin) throw new Error('Встроенный движок Xray не найден в этой сборке. Обнови приложение.');
@@ -120,15 +150,23 @@ async function start(link) {
   const cfgPath = path.join(runDir(), 'xray.json');
   fs.writeFileSync(cfgPath, JSON.stringify(buildConfig(v), null, 2), { mode: 0o600 });
 
+  let stderrTail = '';
   await new Promise((resolve, reject) => {
     proc = spawn(bin, ['run', '-c', cfgPath], { env: { ...process.env, PATH: BIN_PATH } });
     let settled = false;
     const done = (fn, arg) => { if (!settled) { settled = true; fn(arg); } };
     proc.on('error', (e) => done(reject, e));
-    // Даём ядру подняться
+    proc.stderr && proc.stderr.on('data', (d) => { stderrTail = (stderrTail + d.toString()).slice(-500); });
     setTimeout(() => { if (proc && proc.exitCode === null) done(resolve); else done(reject, new Error('Xray не запустился')); }, 900);
     proc.on('exit', (code) => { if (!settled) done(reject, new Error('Xray завершился (код ' + code + ')')); proc = null; });
   });
+
+  // Честная проверка: реально ли поднялся туннель до сервера.
+  const okTunnel = await probeThroughProxy(v.sni || 'www.microsoft.com', 443);
+  if (!okTunnel) {
+    await stop();
+    throw new Error('Не удалось установить соединение с сервером. Проверьте ключ (UUID, pbk, sid, SNI) или доступность сервера.' + (stderrTail ? `\n${stderrTail.trim()}` : ''));
+  }
 
   try {
     await setSystemProxy(true);

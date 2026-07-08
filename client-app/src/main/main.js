@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage, globalShortcut, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, systemPreferences, safeStorage, globalShortcut, shell, Menu, clipboard, session } = require('electron');
 const path = require('path');
 const QRCode = require('qrcode');
 const vault = require('./vault');
@@ -28,9 +28,9 @@ function createWindow() {
 
 function armAutoLock() {
   const mins = Number(vault.getSettings().autoLockMin || 0);
-  if (!mins || !vault.isUnlocked()) return;
+  if (!mins || !vault.isProtected() || !vault.isUnlocked()) return;
   clearTimeout(lockTimer);
-  lockTimer = setTimeout(() => { vault.lock(); if (win) win.webContents.send('locked'); }, mins * 60 * 1000);
+  lockTimer = setTimeout(() => { vault.lockNow(); if (win) win.webContents.send('locked'); }, mins * 60 * 1000);
 }
 function disarmAutoLock() { clearTimeout(lockTimer); }
 
@@ -41,11 +41,40 @@ function applyDock() {
   } catch {}
 }
 
+// Без Edit-меню на macOS Cmd+V/C/X ничего не делают в текстовых полях —
+// Chromium доставляет эти shortcuts через акселераторы меню приложения.
+function buildMenu() {
+  const isMac = process.platform === 'darwin';
+  const template = [
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' }, { type: 'separator' },
+        { role: 'services' }, { type: 'separator' },
+        { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' },
+        { role: 'quit' },
+      ],
+    }] : []),
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' }, { role: 'redo' }, { type: 'separator' },
+        { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on('second-instance', () => { if (win) { win.show(); win.focus(); } });
   app.whenReady().then(() => {
+    buildMenu();
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+      callback(permission === 'media'); // нужно для сканера QR (камера)
+    });
     createWindow();
     applyDock();
     // Горячая клавиша, чтобы вернуть окно, когда приложение скрыто из Dock
@@ -64,38 +93,38 @@ if (!app.requestSingleInstanceLock()) {
 function ok(data) { return { ok: true, data }; }
 function fail(e) { return { ok: false, error: e && e.message ? e.message : String(e) }; }
 
-// ---- Безопасность / блокировка ----
+// ---- Безопасность / блокировка (опциональная, включается пользователем) ----
 ipcMain.handle('sec:status', async () => ok({
-  configured: vault.isConfigured(),
+  protected: vault.isProtected(),
+  method: vault.getLockMethod(),           // 'none' | 'pin' | 'pattern'
   unlocked: vault.isUnlocked(),
   settings: vault.getSettings(),
   xrayAvailable: xray.isAvailable(),
   wgInstalled: await wg.installed(),
   biometricSupported: (() => { try { return systemPreferences.canPromptTouchID(); } catch { return false; } })(),
 }));
-ipcMain.handle('sec:setup', async (_e, password) => { try { vault.setupPassword(password); return ok(true); } catch (e) { return fail(e); } });
-ipcMain.handle('sec:unlock', async (_e, password) => { try { return ok(vault.unlock(password)); } catch (e) { return fail(e); } });
-ipcMain.handle('sec:lock', async () => { vault.lock(); return ok(true); });
-ipcMain.handle('sec:changePassword', async (_e, { oldPass, newPass }) => { try { return ok(vault.changePassword(oldPass, newPass)); } catch (e) { return fail(e); } });
-
-// Биометрия (Touch ID): пароль хранится в Keychain через safeStorage
-ipcMain.handle('sec:enableBiometric', async (_e, password) => {
+// Задать/сменить способ блокировки
+ipcMain.handle('sec:setLock', async (_e, { method, secret }) => { try { return ok(vault.setLock(method, secret)); } catch (e) { return fail(e); } });
+// Снять защиту вовсе
+ipcMain.handle('sec:clearLock', async () => { try { return ok(vault.clearLock()); } catch (e) { return fail(e); } });
+// Разблокировать введённым кодом/паттерном
+ipcMain.handle('sec:unlock', async (_e, secret) => { try { return ok(vault.verifyLock(secret)); } catch (e) { return fail(e); } });
+// Заблокировать сейчас
+ipcMain.handle('sec:lockNow', async () => { vault.lockNow(); return ok(true); });
+// Биометрия — просто вкл/выкл настройку (шифрование ключей не зависит от неё)
+ipcMain.handle('sec:setBiometric', async (_e, on) => {
   try {
-    if (!vault.unlock(password)) throw new Error('Пароль неверен');
-    if (!safeStorage.isEncryptionAvailable()) throw new Error('Keychain недоступен');
-    const blob = safeStorage.encryptString(String(password)).toString('base64');
-    vault.setSettings({ biometric: true, bioBlob: blob });
+    if (on && !systemPreferences.canPromptTouchID()) throw new Error('Touch ID недоступен');
+    vault.setSettings({ biometric: !!on });
     return ok(true);
   } catch (e) { return fail(e); }
 });
-ipcMain.handle('sec:disableBiometric', async () => { vault.setSettings({ biometric: false, bioBlob: null }); return ok(true); });
 ipcMain.handle('sec:biometricUnlock', async () => {
   try {
     const s = vault.getSettings();
-    if (!s.biometric || !s.bioBlob) throw new Error('Биометрия не настроена');
+    if (!s.biometric) throw new Error('Биометрия не включена');
     await systemPreferences.promptTouchID('разблокировать Selkorin');
-    const pw = safeStorage.decryptString(Buffer.from(s.bioBlob, 'base64'));
-    return ok(vault.unlock(pw));
+    return ok(vault.unlockBiometric());
   } catch (e) { return fail(e); }
 });
 
@@ -157,3 +186,11 @@ ipcMain.handle('qr', async (_e, text) => {
 });
 ipcMain.handle('open:external', async (_e, url) => { try { await shell.openExternal(url); return ok(true); } catch (e) { return fail(e); } });
 ipcMain.handle('app:version', async () => ok(app.getVersion()));
+ipcMain.handle('clipboard:read', async () => { try { return ok(clipboard.readText()); } catch (e) { return fail(e); } });
+ipcMain.handle('clipboard:write', async (_e, text) => { try { clipboard.writeText(String(text)); return ok(true); } catch (e) { return fail(e); } });
+ipcMain.handle('camera:requestAccess', async () => {
+  try {
+    if (process.platform !== 'darwin') return ok(true);
+    return ok(await systemPreferences.askForMediaAccess('camera'));
+  } catch (e) { return fail(e); }
+});

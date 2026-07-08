@@ -47,16 +47,45 @@ code { font-family: var(--mono); background: rgba(255,255,255,0.06); padding: 1p
   position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column;
   align-items: center; justify-content: center; padding: 40px 40px; text-align: center;
 }
-.lock-logo { width: 108px; filter: drop-shadow(0 0 16px rgba(255,255,255,0.16)); }
-.lock-name { font-size: 20px; letter-spacing: 8px; font-weight: 800; margin-top: 8px; }
-.lock-sub { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--dim); margin-top: 6px; margin-bottom: 26px; }
-.lock-input {
-  -webkit-app-region: no-drag; width: 100%; text-align: center; background: #0c0c11;
-  border: 1px solid var(--line-2); color: var(--text); border-radius: 11px;
-  padding: 13px; font-size: 18px; letter-spacing: 4px; font-family: var(--mono); outline: none; margin-bottom: 10px;
+.lock-sub { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--dim); margin-top: 8px; margin-bottom: 24px; }
+.lock-err { color: var(--danger); font-size: 12px; min-height: 18px; margin: 10px 0 0; }
+.lock-pane { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+/* ---- Wordmark (вместо логотипа) ---- */
+.wordmark { font-weight: 900; letter-spacing: 6px; color: var(--white); font-size: 15px; }
+.wordmark.lg { font-size: 30px; letter-spacing: 12px; text-shadow: 0 0 24px rgba(255,255,255,0.18); }
+
+/* ---- Графический ключ ---- */
+.pattern-host { display: flex; justify-content: center; }
+.pattern { position: relative; -webkit-app-region: no-drag; touch-action: none; }
+.pattern-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pattern-poly { fill: none; stroke: var(--white); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.pattern.err .pattern-poly { stroke: var(--danger); }
+.pat-dot { position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-2); background: #0c0c11; transition: all 0.12s; }
+.pat-dot.on { border-color: var(--white); background: var(--white); box-shadow: 0 0 14px rgba(255,255,255,0.5); transform: scale(1.15); }
+.pattern.err .pat-dot.on { border-color: var(--danger); background: var(--danger); box-shadow: 0 0 14px rgba(224,96,95,0.6); }
+
+/* ---- PIN pad (никакого ручного ввода с клавиатуры) ---- */
+.pin-dots { display: flex; gap: 14px; margin-bottom: 6px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--line-2); background: transparent; transition: all 0.15s; }
+.pin-dot.filled { background: var(--text); border-color: var(--text); box-shadow: 0 0 10px rgba(255,255,255,0.35); }
+.pinpad { display: grid; grid-template-columns: repeat(3, 64px); gap: 14px; margin-top: 8px; }
+.pinpad button {
+  -webkit-app-region: no-drag; width: 64px; height: 64px; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--line-2); background: linear-gradient(180deg, #1c1c25, #121218);
+  color: var(--text); font-size: 22px; font-weight: 600; transition: all 0.12s ease;
 }
-.lock-input:focus { border-color: rgba(255,255,255,0.4); }
-.lock-err { color: var(--danger); font-size: 12px; min-height: 18px; margin-top: 12px; }
+.pinpad button:hover { border-color: rgba(255,255,255,0.35); background: #22222c; }
+.pinpad button:active { transform: scale(0.94); }
+.pinpad .pin-del, .pinpad .pin-bio { background: transparent; border-color: transparent; color: var(--muted); font-size: 19px; }
+.pinpad .pin-del:hover, .pinpad .pin-bio:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.pinpad .pin-bio[hidden] { visibility: hidden; }
+
+/* ---- Компактный PIN-запрос внутри модалки (askPin) ---- */
+.modal-dots { justify-content: center; margin: 4px 0 14px; }
+.modal-pinpad { grid-template-columns: repeat(3, 52px); justify-content: center; margin: 0 auto 6px; }
+.modal-pinpad button { width: 52px; height: 52px; font-size: 18px; }
+.modal-pinpad span { width: 52px; height: 52px; }
 
 /* ---- Main ---- */
 .main { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; padding: 30px 22px 16px; }
@@ -124,6 +153,11 @@ code { font-family: var(--mono); background: rgba(255,255,255,0.06); padding: 1p
 }
 .fld input:focus, .fld textarea:focus, .fld select:focus { border-color: rgba(255,255,255,0.4); }
 .fld textarea { min-height: 90px; line-height: 1.4; }
+.row-btns { display: flex; gap: 8px; margin: -4px 0 14px; }
+.row-btns .btn { flex: 1; }
+.scan-box { border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; margin-bottom: 14px; background: #000; position: relative; }
+.scan-box video { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+.scan-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 .row-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .row-toggle:last-of-type { border-bottom: none; }
 .row-toggle .rt-label { font-size: 13px; }
@@ -132,6 +166,17 @@ code { font-family: var(--mono); background: rgba(255,255,255,0.06); padding: 1p
 .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--muted); transition: all 0.2s; }
 .switch.on { background: rgba(127,224,176,0.25); border-color: rgba(127,224,176,0.5); }
 .switch.on::after { left: 20px; background: var(--ok); }
+.switch.off { opacity: 0.4; cursor: not-allowed; }
+
+/* ---- Настройки: выбор способа защиты ---- */
+.section-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin: 4px 0 6px; }
+.pick-row { -webkit-app-region: no-drag; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+.pick-row:hover { border-color: var(--line-2); background: rgba(255,255,255,0.02); }
+.pick-row.on { border-color: rgba(127,224,176,0.5); box-shadow: inset 0 0 0 1px rgba(127,224,176,0.12); }
+.pick-row .rt-label { font-size: 13px; font-weight: 600; }
+.pick-row .rt-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.pick-mark { color: var(--ok); font-weight: 700; width: 16px; text-align: center; }
+.divider { height: 1px; background: var(--line); margin: 14px 0; }
 .qr-wrap { text-align: center; margin: 6px 0 12px; }
 .qr { width: 200px; border-radius: 12px; border: 1px solid var(--line); background: #fff; padding: 8px; }
 .link-box { background: #0c0c11; border: 1px solid var(--line-2); border-radius: 9px; padding: 10px; font-family: var(--mono); font-size: 10.5px; color: var(--text); word-break: break-all; user-select: text; max-height: 90px; overflow-y: auto; }
