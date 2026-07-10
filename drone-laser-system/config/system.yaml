@@ -1,0 +1,78 @@
+# Конфигурация Selkorin Sky Sentinel.
+# Значения по умолчанию безопасны: backends=sim, огонь ниже горизонта запрещён.
+
+system:
+  name: "Selkorin Sky Sentinel"
+  mode: "drone"        # drone (подсветка) | insect (уничтожение) | idle
+
+camera:
+  device: 0            # индекс/путь камеры для OpenCV
+  width: 1280
+  height: 720
+  fps: 30
+  # Внутренние параметры — ОБЯЗАТЕЛЬНО откалибровать (docs/calibration.md)
+  fx: 1000.0
+  fy: 1000.0
+  cx: 640.0
+  cy: 360.0
+
+gimbal:
+  backend: "sim"        # sim | serial
+  serial_port: "/dev/ttyUSB0"
+  baud: 115200
+  pan_min_deg: -170.0
+  pan_max_deg: 170.0
+  tilt_min_deg: 0.0
+  tilt_max_deg: 85.0
+  max_speed_deg_s: 120.0
+  boresight_offset_pan_deg: 0.0    # поправка совмещения лазера и оптоси
+  boresight_offset_tilt_deg: 0.0
+  # PID по угловой ошибке -> угловая скорость (град/с). Интегральный член
+  # устраняет ошибку слежения за целью с постоянной скоростью (тип-2 система).
+  pid_pan:  {kp: 12.0, ki: 6.0, kd: 0.4, out_limit: 120.0}
+  pid_tilt: {kp: 12.0, ki: 6.0, kd: 0.4, out_limit: 120.0}
+  aim_tolerance_deg: 0.1           # порог «наведён» для разрешения огня
+
+detection:
+  drone:
+    min_area_px: 4
+    max_area_px: 2000
+    bg_history: 200
+    bg_var_threshold: 24
+    min_speed_px_s: 3.0            # отсекает неподвижные звёзды
+  insect:
+    min_area_px: 1
+    max_area_px: 60
+    bg_history: 100
+    bg_var_threshold: 18
+    min_speed_px_s: 20.0
+
+tracking:
+  max_track_age_frames: 15         # сколько кадров держать трек без обновления
+  gate_px: 60.0                    # окно ассоциации детекций с треками
+  min_hits_to_confirm: 3           # кадров подряд до «подтверждён»
+
+laser:
+  backend: "sim"                   # sim | serial (общий канал с гимбалом)
+  mark:                            # подсветка дрона — БЕЗОПАСНО ДЛЯ ГЛАЗ
+    power_pct: 100                 # маломощный модуль класса <=3R
+    max_on_time_s: 30.0
+  eliminate:                       # уничтожение насекомых — только ближняя зона
+    power_pct: 100
+    dwell_ms: 120
+    max_range_m: 3.0
+
+safety:
+  require_key: true                # без ключа взведения огонь невозможен
+  watchdog_timeout_s: 0.5
+  aim_tolerance_deg: 0.1
+  # Зоны ЗАПРЕТА огня (углы, в которых стрелять нельзя).
+  # По умолчанию запрещено всё ниже горизонта (защита воздушных судов, людей).
+  no_fire_zones_deg:
+    - {pan_min: -180.0, pan_max: 180.0, tilt_min: -90.0, tilt_max: 0.0}
+  # Доп. условия для режима eliminate (насекомые)
+  human_presence_interlock: true
+  ambient_lux_max_for_eliminate: 50.0
+  max_range_m_for_eliminate: 3.0
+  max_continuous_fire_s: 30.0
+  laser_temp_max_c: 55.0

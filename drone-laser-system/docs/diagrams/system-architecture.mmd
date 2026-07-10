@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph SENSE["Сенсоры / оптика"]
+        CAM["Камера (моно)"]
+        IR["ИК-подсветка / тепловизор"]
+        AMB["Датчик освещённости"]
+        PIR["Датчик присутствия человека"]
+    end
+    subgraph COMPUTE["Вычислитель"]
+        DET["Детектор (OpenCV)"]
+        TRK["Трекер (Калман)"]
+        COORD["Пиксель → угол"]
+        ORCH["Оркестратор (FSM)"]
+        SAFE["Безопасность"]
+    end
+    subgraph ACT["Исполнительные устройства"]
+        MCU["Контроллер осей"]
+        PAN["Привод азимута"]
+        TILT["Привод возвышения"]
+        LSR["Лазер"]
+        ESTOP["E-STOP + ключ + индикатор"]
+    end
+    CAM --> DET
+    IR -.-> CAM
+    DET --> TRK --> COORD --> ORCH
+    AMB --> SAFE
+    PIR --> SAFE
+    ORCH --> SAFE
+    ORCH -->|углы| MCU
+    SAFE -->|разрешение огня| MCU
+    MCU --> PAN
+    MCU --> TILT
+    MCU --> LSR
+    ESTOP -.аппаратный разрыв.-> LSR
+    ESTOP --> MCU

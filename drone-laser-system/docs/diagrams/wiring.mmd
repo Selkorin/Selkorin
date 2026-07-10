@@ -1,0 +1,30 @@
+flowchart TB
+    subgraph PI["Вычислитель"]
+        USB["USB / CSI"]
+        UART0["UART / USB-serial"]
+    end
+    subgraph MCU["Контроллер осей"]
+        STEP_P["STEP/DIR азимут"]
+        STEP_T["STEP/DIR возвышение"]
+        EN["ENABLE драйверов"]
+        PWM["Управление лазером"]
+        DI["Входы: концевики, E-STOP, ключ, термо"]
+        DO["Выходы: индикатор, реле блокировки"]
+    end
+    subgraph DRIVERS["Драйверы TMC2209 x2"]
+        DP["Азимут"]
+        DT["Возвышение"]
+    end
+    CAM["Камера"] --> USB
+    UART0 <-->|115200 8N1| MCU
+    STEP_P --> DP --> MOTP["NEMA17 азимут"]
+    STEP_T --> DT --> MOTT["NEMA17 возвышение"]
+    EN --> DP
+    EN --> DT
+    PWM --> LDRV["Драйвер лазера"] --> LASER["Лазерный модуль"]
+    LIMIT["Концевики x2"] --> DI
+    ESTOP2["E-STOP"] --> DI
+    KEY2["Ключ"] --> DI
+    THERM["Термистор лазера"] --> DI
+    DO --> LED["Индикатор излучения"]
+    DO --> RELAY["Реле блокировки лазера"]

@@ -1,0 +1,20 @@
+flowchart LR
+    REQ["Запрос огня\n(оркестратор)"] --> EV{"SafetyManager.evaluate"}
+    ARMED{"Взведён ключом?"} --> EV
+    ESTOP{"E-STOP отпущен?"} --> EV
+    WD{"Watchdog свеж?"} --> EV
+    ZONE{"Цель вне зон\nзапрета огня?"} --> EV
+    THERM{"Температура\nв норме?"} --> EV
+    TIME{"Лимит времени\nне превышен?"} --> EV
+    subgraph KILL["Доп. условия режима KILL"]
+        RANGE{"Цель в ближней зоне?"}
+        HUMAN{"Нет человека\nв секторе?"}
+        LUX{"Освещённость в норме?"}
+        CLS{"Классиф.: насекомое?"}
+    end
+    RANGE --> EV
+    HUMAN --> EV
+    LUX --> EV
+    CLS --> EV
+    EV -->|все TRUE| FIRE["РАЗРЕШЕНО: laser.fire"]
+    EV -->|любое FALSE| SAFE["ЗАПРЕЩЕНО: laser.off + лог + SAFE"]

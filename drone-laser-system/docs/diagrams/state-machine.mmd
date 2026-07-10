@@ -1,0 +1,19 @@
+stateDiagram-v2
+    [*] --> BOOT
+    BOOT --> SELFTEST: инициализация
+    SELFTEST --> SAFE: самопроверка OK
+    SELFTEST --> FAULT: ошибка
+    SAFE --> SEARCH: взведение ключом
+    SEARCH --> TRACK: цель обнаружена
+    TRACK --> SEARCH: цель потеряна
+    TRACK --> AIM: цель устойчива
+    AIM --> TRACK: цель ушла из сектора
+    AIM --> ENGAGE: наведён + безопасность OK
+    ENGAGE --> AIM: цель смещается
+    ENGAGE --> SAFE: цель поражена/ушла
+    SAFE --> FAULT: отказ
+    FAULT --> SAFE: сброс оператором
+    SEARCH --> SAFE: E-STOP
+    TRACK --> SAFE: E-STOP
+    AIM --> SAFE: E-STOP
+    ENGAGE --> SAFE: E-STOP
