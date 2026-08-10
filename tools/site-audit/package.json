@@ -1,0 +1,17 @@
+{
+  "name": "site-audit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Неинтрузивный чёрный-ящик аудит сайта: производительность, SEO, доступность, мобильная вёрстка, конфигурация безопасности, юридически обязательные страницы.",
+  "bin": {
+    "site-audit": "audit.mjs"
+  },
+  "scripts": {
+    "audit": "node audit.mjs",
+    "audit:puffin": "node audit.mjs https://puffinpizza.ru/ --paths=/,/catalog/picca,/promo"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}
