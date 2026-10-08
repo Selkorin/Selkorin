@@ -721,3 +721,8 @@ section[id]{scroll-margin-top:88px}
 
 /* brighter body text on dark sections (light sections keep their own --dim) */
 :root { --dim: #c4c5ce; --mute: #a2a3ad }
+
+/* card titles take the brand purple; main headings get a heavier weight so the fill reads solid */
+.scard .t, .dir .t { color: var(--accent2); text-shadow: 0 0 16px rgba(156,128,242,.35) }
+.light .scard .t, .light .dir .t { color: var(--accent) }
+.disp, .sechead .h2, .final h2 { font-weight: 400 }
