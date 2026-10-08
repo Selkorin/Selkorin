@@ -1,0 +1,14 @@
+---
+// Shared HTML shell for every WAI page.
+// `head` and `body` are the original markup of each page, kept as-is.
+const { head, body, bodyAttrs = {} } = Astro.props;
+---
+<!doctype html>
+<html lang="ru">
+  <head>
+    <Fragment set:html={head} />
+  </head>
+  <body {...bodyAttrs}>
+    <Fragment set:html={body} />
+  </body>
+</html>

@@ -1,0 +1,7 @@
+---
+import Base from '../../layouts/Base.astro';
+import head from '../../fragments/services__web.head.html?raw';
+import body from '../../fragments/services__web.body.html?raw';
+const bodyAttrs = {"data-page": "web"};
+---
+<Base head={head} body={body} bodyAttrs={bodyAttrs} />
