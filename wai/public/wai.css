@@ -660,3 +660,23 @@ section[id]{scroll-margin-top:88px}
   .hero-actions .btn{min-height:76px;padding:0 10px;font-size:9px;line-height:1.45;letter-spacing:.1em}
 }
 @media(prefers-reduced-motion:reduce){.paint-line{clip-path:none;animation:none}.paint-fill{opacity:1}.brush-tip{display:none}.finger-letter{stroke-dashoffset:0;opacity:1;animation:none}.apple-title,.glass-word{opacity:1;filter:none;transform:none;transition:none}}
+
+/* ---- Responsive polish: readable type and no overlaps on phones/tablets ---- */
+@media (max-width: 760px) {
+  /* mono labels were 8–10px; keep them legible */
+  .cap, .sflow .cap, .fnode .cap, .ledger li .cap, .chan li .cap, .biglist li .cap { font-size: 11px; letter-spacing: .14em }
+  .hero-desc { font-size: 11px; line-height: 1.5 }
+  .hero-subline { font-size: 13px; line-height: 1.45 }
+
+  /* hero: keep the category labels above the CTA buttons instead of behind them */
+  .hero-desc { top: auto; bottom: 178px; height: auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 14px; width: auto; left: 24px; right: 24px; pointer-events: none }
+  .hero-desc span, .hero-desc span:nth-child(n) { position: static; opacity: 1; transform: none; transition: none }
+
+  /* contact headline: tighter leading so the outlined lines don't collide */
+  #contact, #contact .wrap, #contact .final { min-width: 0; max-width: 100% }
+  .final h2 { font-size: clamp(28px, 8.6vw, 52px); line-height: 1.08; overflow-wrap: anywhere }
+
+  /* footer: keep the "наверх" button clear of the chat button */
+  .ft-bot { padding-bottom: 96px }
+  .ft-desc, .ft-col a { font-size: 16px }
+}
