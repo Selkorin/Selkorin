@@ -693,7 +693,7 @@ section[id]{scroll-margin-top:88px}
 }
 
 /* ---- Headings: soft silver, gentle glow and a rare, subtle glitch ---- */
-:root { --h-silver: #c2c5d0; --h-outline: #ff8fc2; --h-glow: rgba(210,210,230,.26); --h-rgb1: rgba(156,128,242,.5); --h-rgb2: rgba(120,220,255,.38) }
+:root { --h-silver: #c2c5d0; --h-outline: #9c80f2; --h-glow: rgba(210,210,230,.26); --h-rgb1: rgba(156,128,242,.5); --h-rgb2: rgba(120,220,255,.38) }
 :is(h1,h2,h3,.disp,.mega,.slogan,.final h2,.panel h3,.psteps h3,.quote,.inv-title,.scard .t,.dir .t) {
   color: var(--h-silver);
   -webkit-text-stroke: 1px var(--h-outline);
