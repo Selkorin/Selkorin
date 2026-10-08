@@ -3,7 +3,7 @@
 // `head` and `body` are the original markup of each page; `seo` drives the
 // title, description, canonical, Open Graph and structured data.
 const { head, body, bodyAttrs = {}, seo } = Astro.props;
-const site = 'https://waimarketing.ai';
+const site = 'https://wai-marketing.ru';
 const canonical = new URL(seo.canonical ?? seo.path, site).href;
 const image = new URL('/assets/wai-hero-city-poster.jpg', site).href;
 ---

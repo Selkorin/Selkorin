@@ -1,7 +1,7 @@
 // Sitemap built from the page routes. Pages marked noindex are left out.
 import type { APIRoute } from 'astro';
 
-const SITE = 'https://waimarketing.ai';
+const SITE = 'https://wai-marketing.ru';
 const EXCLUDE = ['WAI Website'];
 
 export const prerender = true;
