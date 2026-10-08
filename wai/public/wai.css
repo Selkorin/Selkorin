@@ -693,17 +693,16 @@ section[id]{scroll-margin-top:88px}
 }
 
 /* ---- Headings: soft silver, gentle glow and a rare, subtle glitch ---- */
-:root { --h-silver: #c2c5d0; --h-outline: #9c80f2; --h-glow: rgba(210,210,230,.26); --h-rgb1: rgba(156,128,242,.5); --h-rgb2: rgba(120,220,255,.38) }
+:root { --h-silver: #b2b6c4; --h-glow: rgba(210,210,230,.26); --h-rgb1: rgba(156,128,242,.5); --h-rgb2: rgba(120,220,255,.38) }
 :is(h1,h2,h3,.disp,.mega,.slogan,.final h2,.panel h3,.psteps h3,.quote,.inv-title,.scard .t,.dir .t) {
   color: var(--h-silver);
-  -webkit-text-stroke: 1px var(--h-outline);
   text-shadow: 0 0 18px var(--h-glow), 0 0 44px rgba(156,128,242,.1);
   animation: hSoftGlitch 9s steps(1) infinite;
 }
 /* the outlined last line of the contact headline keeps its transparent fill */
 .final h2 span:last-child { color: transparent; text-shadow: none }
 /* light sections keep dark type */
-.light :is(h1,h2,h3,.disp,.mega,.panel h3,.quote) { color: var(--fg); -webkit-text-stroke: 0; text-shadow: none; animation: none }
+.light :is(h1,h2,h3,.disp,.mega,.panel h3,.quote) { color: var(--fg); text-shadow: none; animation: none }
 /* hero headline (SVG) gets the same silver and glow */
 .apple-title text { fill: var(--h-silver) }
 .apple-title svg { filter: drop-shadow(0 0 14px var(--h-glow)) }
@@ -719,3 +718,6 @@ section[id]{scroll-margin-top:88px}
 @media (prefers-reduced-motion: reduce) {
   :is(h1,h2,h3,.disp,.mega,.slogan,.final h2,.panel h3,.psteps h3,.quote,.inv-title,.scard .t,.dir .t) { animation: none }
 }
+
+/* brighter body text on dark sections (light sections keep their own --dim) */
+:root { --dim: #c4c5ce; --mute: #a2a3ad }
