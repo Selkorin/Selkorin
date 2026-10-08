@@ -680,3 +680,14 @@ section[id]{scroll-margin-top:88px}
   .ft-bot { padding-bottom: 96px }
   .ft-desc, .ft-col a { font-size: 16px }
 }
+
+/* tablet and desktop: hero CTAs were too wide and covered the side labels */
+@media (min-width: 761px) {
+  .hero-actions { width: min(520px, 46vw); bottom: clamp(28px, 5vh, 62px); gap: 12px }
+  .hero-actions .btn { min-height: 52px; padding: 0 16px; font-size: 11px; letter-spacing: .12em }
+}
+
+/* wide screens: cap the hero headline so it doesn't grow down into the CTAs */
+@media (min-width: 761px) {
+  .apple-title { left: 0; right: 0; margin-inline: auto; width: min(calc(100% - 50px), 1240px) }
+}
