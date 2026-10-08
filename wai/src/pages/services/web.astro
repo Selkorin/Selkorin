@@ -2,6 +2,28 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/services__web.head.html?raw';
 import body from '../../fragments/services__web.body.html?raw';
+const seo = {
+  "path": "/services/web.html",
+  "title": "Лендинг и сайт под ключ для теста ниши — WAI",
+  "description": "Запускаем лендинг или сайт для теста ниши и рекламы без своих программистов и дизайнеров, с короткими сроками.",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Разработка лендингов и сайтов под ключ",
+    "description": "Лендинги и сайты для теста ниши и быстрого запуска проекта без своих программистов и дизайнеров.",
+    "provider": {
+      "@type": "Organization",
+      "name": "WAI",
+      "url": "https://waimarketing.ai/",
+      "email": "hello@waimarketing.ai",
+      "sameAs": [
+        "https://t.me/waimarketing"
+      ]
+    },
+    "areaServed": "RU",
+    "serviceType": "Разработка лендингов и сайтов под ключ"
+  }
+};
 const bodyAttrs = {"data-page": "web"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

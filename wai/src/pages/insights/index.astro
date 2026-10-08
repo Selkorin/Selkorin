@@ -2,6 +2,11 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__index.head.html?raw';
 import body from '../../fragments/insights__index.body.html?raw';
+const seo = {
+  "path": "/insights/index.html",
+  "title": "Статьи об AI для бизнеса — WAI Insights",
+  "description": "Разборы AI-агентов, чат-ботов, RAG и автоматизации процессов: что работает и сколько это стоит."
+};
 const bodyAttrs = {"data-page": "insights"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__ai-agent-vs-chatbot.head.html?raw';
 import body from '../../fragments/insights__ai-agent-vs-chatbot.body.html?raw';
+const seo = {
+  "path": "/insights/ai-agent-vs-chatbot.html",
+  "title": "AI-агент или чат-бот: в чём разница — WAI Insights",
+  "description": "Чем AI-агент отличается от чат-бота, когда нужен каждый из них и как выбрать для своих процессов.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__ai-agent-crm.head.html?raw';
 import body from '../../fragments/insights__ai-agent-crm.body.html?raw';
+const seo = {
+  "path": "/insights/ai-agent-crm.html",
+  "title": "Как AI-агент работает с CRM компании — WAI Insights",
+  "description": "Как подключить AI-агента к CRM, какие задачи он берёт на себя и где нужен контроль человека.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

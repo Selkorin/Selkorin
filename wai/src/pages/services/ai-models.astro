@@ -2,6 +2,28 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/services__ai-models.head.html?raw';
 import body from '../../fragments/services__ai-models.body.html?raw';
+const seo = {
+  "path": "/services/ai-models.html",
+  "title": "Интеграция языковых моделей в бизнес-процессы — WAI",
+  "description": "Подбираем AI-модель под задачу и встраиваем её в процессы компании: данные, безопасность, контроль результата.",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Подбор и внедрение AI-моделей",
+    "description": "Подбор языковых моделей под задачу бизнеса и интеграция в бизнес-процессы компании.",
+    "provider": {
+      "@type": "Organization",
+      "name": "WAI",
+      "url": "https://waimarketing.ai/",
+      "email": "hello@waimarketing.ai",
+      "sameAs": [
+        "https://t.me/waimarketing"
+      ]
+    },
+    "areaServed": "RU",
+    "serviceType": "Подбор и внедрение AI-моделей"
+  }
+};
 const bodyAttrs = {"data-page": "ai-models"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

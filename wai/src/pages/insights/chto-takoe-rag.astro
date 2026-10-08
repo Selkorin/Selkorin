@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__chto-takoe-rag.head.html?raw';
 import body from '../../fragments/insights__chto-takoe-rag.body.html?raw';
+const seo = {
+  "path": "/insights/chto-takoe-rag.html",
+  "title": "Что такое RAG и зачем он бизнесу — WAI Insights",
+  "description": "RAG простыми словами: как языковая модель отвечает на основе документов компании и где это применяется.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

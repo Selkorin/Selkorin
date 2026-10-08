@@ -2,6 +2,22 @@
 import Base from '../layouts/Base.astro';
 import head from '../fragments/index.head.html?raw';
 import body from '../fragments/index.body.html?raw';
+const seo = {
+  "path": "/",
+  "title": "WAI — AI-агенты, сайты, приложения и реклама для бизнеса",
+  "description": "Создаём AI-агентов, сайты и лендинги, приложения и рекламу под задачи бизнеса. Быстро, без лишних затрат на команду.",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "WAI",
+    "url": "https://waimarketing.ai/",
+    "email": "hello@waimarketing.ai",
+    "sameAs": [
+      "https://t.me/waimarketing"
+    ],
+    "description": "AI-агенты, приложения, сайты, AI-креатив и performance-маркетинг под задачи бизнеса."
+  }
+};
 const bodyAttrs = {"class": "locked", "data-page": "home"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__stoimost-razrabotki-ai-agenta.head.html?raw';
 import body from '../../fragments/insights__stoimost-razrabotki-ai-agenta.body.html?raw';
+const seo = {
+  "path": "/insights/stoimost-razrabotki-ai-agenta.html",
+  "title": "Сколько стоит разработка AI-агента — WAI Insights",
+  "description": "От чего зависит стоимость AI-агента, какие этапы входят в разработку и как не переплатить.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

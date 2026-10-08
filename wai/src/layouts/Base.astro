@@ -1,11 +1,28 @@
 ---
 // Shared HTML shell for every WAI page.
-// `head` and `body` are the original markup of each page, kept as-is.
-const { head, body, bodyAttrs = {} } = Astro.props;
+// `head` and `body` are the original markup of each page; `seo` drives the
+// title, description, canonical, Open Graph and structured data.
+const { head, body, bodyAttrs = {}, seo } = Astro.props;
+const site = 'https://waimarketing.ai';
+const canonical = new URL(seo.canonical ?? seo.path, site).href;
+const image = new URL('/assets/wai-hero-city-poster.jpg', site).href;
 ---
 <!doctype html>
 <html lang="ru">
   <head>
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <link rel="canonical" href={canonical} />
+    {seo.noindex && <meta name="robots" content="noindex,follow" />}
+    <meta property="og:type" content={seo.type ?? 'website'} />
+    <meta property="og:title" content={seo.title} />
+    <meta property="og:description" content={seo.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:site_name" content="WAI" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {seo.schema && <script type="application/ld+json" set:html={JSON.stringify(seo.schema)} />}
     <Fragment set:html={head} />
   </head>
   <body {...bodyAttrs}>

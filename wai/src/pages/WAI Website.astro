@@ -2,6 +2,13 @@
 import Base from '../layouts/Base.astro';
 import head from '../fragments/WAI-Website.head.html?raw';
 import body from '../fragments/WAI-Website.body.html?raw';
+const seo = {
+  "path": "/WAI%20Website.html",
+  "canonical": "/",
+  "noindex": true,
+  "title": "WAI — AI-агенты, сайты, приложения и реклама для бизнеса",
+  "description": "Создаём AI-агентов, сайты и лендинги, приложения и рекламу под задачи бизнеса. Быстро, без лишних затрат на команду."
+};
 const bodyAttrs = {"class": "locked", "data-page": "home"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

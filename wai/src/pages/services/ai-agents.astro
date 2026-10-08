@@ -2,6 +2,28 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/services__ai-agents.head.html?raw';
 import body from '../../fragments/services__ai-agents.body.html?raw';
+const seo = {
+  "path": "/services/ai-agents.html",
+  "title": "AI-агенты и чат-боты для бизнеса — разработка и внедрение — WAI",
+  "description": "Цифровые сотрудники для клиентов, данных и внутренних систем: подключаем AI-агентов к CRM и процессам компании.",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Разработка и внедрение AI-агентов",
+    "description": "AI-агенты и чат-боты для клиентов, данных и внутренних систем компании, с подключением к CRM и процессам.",
+    "provider": {
+      "@type": "Organization",
+      "name": "WAI",
+      "url": "https://waimarketing.ai/",
+      "email": "hello@waimarketing.ai",
+      "sameAs": [
+        "https://t.me/waimarketing"
+      ]
+    },
+    "areaServed": "RU",
+    "serviceType": "Разработка и внедрение AI-агентов"
+  }
+};
 const bodyAttrs = {"data-page": "ai-agents"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

@@ -2,6 +2,28 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/services__ai-creative.head.html?raw';
 import body from '../../fragments/services__ai-creative.body.html?raw';
+const seo = {
+  "path": "/services/ai-creative.html",
+  "title": "AI-видео и креативы для рекламы — WAI",
+  "description": "Рекламные ролики, визуалы и генеративный контент для рекламы и соцсетей. Быстро и с контролем бренда.",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "AI-видео и рекламные креативы",
+    "description": "Рекламные ролики, визуалы и генеративный контент для рекламы и социальных сетей.",
+    "provider": {
+      "@type": "Organization",
+      "name": "WAI",
+      "url": "https://waimarketing.ai/",
+      "email": "hello@waimarketing.ai",
+      "sameAs": [
+        "https://t.me/waimarketing"
+      ]
+    },
+    "areaServed": "RU",
+    "serviceType": "AI-видео и рекламные креативы"
+  }
+};
 const bodyAttrs = {"data-page": "ai-creative"};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

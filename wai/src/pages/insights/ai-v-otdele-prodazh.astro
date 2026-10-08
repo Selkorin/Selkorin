@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__ai-v-otdele-prodazh.head.html?raw';
 import body from '../../fragments/insights__ai-v-otdele-prodazh.body.html?raw';
+const seo = {
+  "path": "/insights/ai-v-otdele-prodazh.html",
+  "title": "Как использовать AI в отделе продаж — WAI Insights",
+  "description": "Где AI помогает отделу продаж: квалификация лидов, ответы клиентам, подготовка коммерческих предложений.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />

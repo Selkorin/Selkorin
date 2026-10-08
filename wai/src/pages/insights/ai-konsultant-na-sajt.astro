@@ -2,6 +2,12 @@
 import Base from '../../layouts/Base.astro';
 import head from '../../fragments/insights__ai-konsultant-na-sajt.head.html?raw';
 import body from '../../fragments/insights__ai-konsultant-na-sajt.body.html?raw';
+const seo = {
+  "path": "/insights/ai-konsultant-na-sajt.html",
+  "title": "Как внедрить AI-консультанта на сайт — WAI Insights",
+  "description": "Внедрение AI-консультанта на сайт: база знаний, интеграция с мессенджерами и CRM, метрики результата.",
+  "type": "article"
+};
 const bodyAttrs = {};
 ---
-<Base head={head} body={body} bodyAttrs={bodyAttrs} />
+<Base head={head} body={body} bodyAttrs={bodyAttrs} seo={seo} />
