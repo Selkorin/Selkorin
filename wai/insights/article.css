@@ -1,0 +1,18 @@
+.ah{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px var(--pad);background:rgba(10,10,10,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.alogo{display:flex;align-items:center;gap:16px}.alogo svg{width:56px;height:16px;fill:var(--fg)}
+.art{max-width:880px;padding-top:40px;padding-bottom:120px}
+.crumbs ol{list-style:none;margin:0 0 64px;padding:0;display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.crumbs li+li::before{content:"/";margin-right:8px;color:var(--line2)}
+.crumbs a{color:var(--dim)}.crumbs [aria-current]{color:var(--fg)}
+.art h1{font-size:clamp(30px,4.6vw,56px);margin:20px 0 28px}
+.lede{font-size:clamp(18px,1.6vw,21px);color:var(--fg);margin:0 0 48px;text-wrap:pretty;max-width:720px}
+.cover{aspect-ratio:16/9;border:1px solid var(--line);margin-bottom:64px}
+.content h2{font-family:var(--display);font-weight:300;font-size:clamp(22px,2.4vw,30px);letter-spacing:.03em;text-transform:uppercase;margin:56px 0 16px;line-height:1.2}
+.content h3{font-size:19px;font-weight:500;margin:32px 0 10px}
+.content p{color:var(--dim);margin:0 0 16px;font-size:17px;line-height:1.7}
+.content .ph{border:1px dashed var(--line2);padding:14px 16px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--mute)}
+.cta-box{margin-top:72px;padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;gap:10px}
+.cta-box a{font-family:var(--display);font-weight:300;font-size:clamp(20px,2.4vw,28px);text-transform:uppercase;letter-spacing:.04em}
+.related{margin-top:96px}.related h2{margin:0 0 24px}
+.related .posts a{grid-template-columns:140px minmax(0,1fr) 32px}
+@media(max-width:700px){.related .posts a{grid-template-columns:1fr 24px}}
